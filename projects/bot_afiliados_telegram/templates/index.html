@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DealHunter AI - Bot de Afiliados Telegram</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">🏷️</div>
+      <div>
+        <h1>DealHunter AI</h1>
+        <p>Automação de Ofertas & Links de Afiliados 24/7</p>
+      </div>
+    </div>
+    <div class="status-badge" id="statusBadge">
+      <div class="status-pulse"></div>
+      <span id="statusText">PARADO</span>
+    </div>
+  </header>
+
+  <div class="dashboard-grid">
+    <div class="card metric-card">
+      <span class="metric-title">Ofertas Capturadas</span>
+      <span class="metric-value text-purple" id="metricDealsCount">0</span>
+    </div>
+
+    <div class="card metric-card">
+      <span class="metric-title">Cliques Estimados</span>
+      <span class="metric-value text-green" id="metricClicks">0</span>
+    </div>
+
+    <div class="card metric-card">
+      <span class="metric-title">Comissões Estimadas</span>
+      <span class="metric-value text-orange" id="metricCommissions">€0.00</span>
+    </div>
+
+    <div class="card metric-card">
+      <span class="metric-title">ID de Afiliado Ativa</span>
+      <span class="metric-value" style="font-size: 20px;" id="metricTag">edmilson-20</span>
+    </div>
+  </div>
+
+  <div class="main-content">
+    
+    <!-- Deals Cards Display -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>🔥 Feed de Ofertas Capturadas (Com Link de Afiliado Injetado)</h2>
+        <button class="btn btn-secondary" id="btnScanNow">🔍 Procurar Oferta Agora</button>
+      </div>
+
+      <div class="deals-grid" id="dealsGrid">
+        <p style="color: var(--text-muted); grid-column: 1/-1; text-align: center; padding: 40px;">
+          Nenhuma oferta capturada ainda. Clique em "Iniciar Bot" ou "Procurar Oferta Agora".
+        </p>
+      </div>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="card">
+      <h2>⚙️ Configurações do Telegram</h2>
+      <br>
+      <form id="configForm">
+        <div class="form-group">
+          <label>Telegram Bot Token</label>
+          <input type="text" class="form-control" id="inputBotToken" placeholder="ex: 123456789:ABCdefGHIjklMNO...">
+        </div>
+
+        <div class="form-group">
+          <label>ID do Canal / Grupo Telegram</label>
+          <input type="text" class="form-control" id="inputChatId" placeholder="ex: @meu_canal_promocoes">
+        </div>
+
+        <div class="form-group">
+          <label>ID / Tag de Afiliado Amazon</label>
+          <input type="text" class="form-control" id="inputAmazonTag" value="edmilson-20">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn btn-primary" id="btnToggleBot">
+            ▶ Iniciar Varredura 24/7
+          </button>
+          <button type="submit" class="btn" style="background: rgba(255,255,255,0.08); color: white;">
+            💾 Salvar Configurações
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
