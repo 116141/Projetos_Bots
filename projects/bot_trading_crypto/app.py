@@ -1,0 +1,42 @@
+from flask import Flask, render_template, jsonify, request
+from bot_engine import TradingBotEngine
+
+app = Flask(__name__, static_folder='static', template_folder='templates')
+bot = TradingBotEngine()
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/api/status', methods=['GET'])
+def get_status():
+    return jsonify(bot.get_status())
+
+@app.route('/api/start', methods=['POST'])
+def start_bot():
+    bot.start()
+    return jsonify({"status": "started", "is_running": bot.is_running})
+
+@app.route('/api/stop', methods=['POST'])
+def stop_bot():
+    bot.stop()
+    return jsonify({"status": "stopped", "is_running": bot.is_running})
+
+@app.route('/api/config', methods=['POST'])
+def update_config():
+    data = request.json or {}
+    symbol = data.get('symbol', 'BTC/USDT')
+    strategy = data.get('strategy', 'MA_CROSSOVER')
+    trade_amount = float(data.get('trade_amount', 500))
+    take_profit = float(data.get('take_profit', 2.0))
+    stop_loss = float(data.get('stop_loss', 1.0))
+    
+    bot.update_config(symbol, strategy, trade_amount, take_profit, stop_loss)
+    return jsonify({"status": "updated", "config": data})
+
+if __name__ == '__main__':
+    print("==========================================================")
+    print("🚀 QUANTTRADER BOT DASHBOARD - INICIANDO SERVIDOR WEB...")
+    print("Acesse no navegador: http://localhost:5000")
+    print("==========================================================")
+    app.run(host='0.0.0.0', port=5000, debug=True)

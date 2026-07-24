@@ -1,0 +1,11 @@
+# Ignore private environment credentials
+.env
+*.env
+*.key
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.idea/
+.vscode/

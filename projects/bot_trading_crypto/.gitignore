@@ -1,0 +1,17 @@
+# Credentials & Private Environment Variables (CRITICAL SECURITY)
+.env
+*.env
+*.key
+credentials.json
+
+# Python cache & virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+.idea/
+.vscode/
