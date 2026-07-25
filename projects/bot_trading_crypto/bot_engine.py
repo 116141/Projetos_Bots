@@ -112,10 +112,17 @@ class TradingBotEngine:
             sma_fast = self.calculate_sma(7)
             sma_slow = self.calculate_sma(25)
 
-            # Manage active position (Check Take Profit / Stop Loss)
+            # Manage active position (Check Take Profit / Stop Loss / Trailing Stop)
             if self.active_position is not None:
                 entry_price = self.active_position['entry_price']
                 pnl_pct = ((price - entry_price) / entry_price) * 100
+
+                # Update peak price for trailing stop
+                if price > self.active_position.get('highest_price', entry_price):
+                    self.active_position['highest_price'] = price
+
+                highest_price = self.active_position.get('highest_price', entry_price)
+                drop_from_peak_pct = ((highest_price - price) / highest_price) * 100
 
                 should_close = False
                 close_reason = ""
@@ -126,9 +133,12 @@ class TradingBotEngine:
                 elif pnl_pct <= -self.stop_loss_pct:
                     should_close = True
                     close_reason = f"Stop Loss ({pnl_pct:.2f}%)"
-                elif self.strategy == "RSI_SCALPING" and rsi >= 70:
+                elif drop_from_peak_pct >= 0.8 and pnl_pct >= 0.4:
                     should_close = True
-                    close_reason = f"RSI Overbought ({rsi:.1f})"
+                    close_reason = f"Trailing Profit Lock (+{pnl_pct:.2f}%)"
+                elif self.strategy == "RSI_SCALPING" and rsi >= 65:
+                    should_close = True
+                    close_reason = f"RSI Exit ({rsi:.1f})"
 
                 if should_close:
                     total_pnl = (price - entry_price) * self.active_position['amount']
@@ -150,18 +160,26 @@ class TradingBotEngine:
                     self.active_position = None
                 return
 
-            # Signal Generation for BUY
+            # Signal Generation for BUY (with Smart Entry Filters)
             signal_buy = False
-            if self.strategy == "MA_CROSSOVER":
-                if len(self.price_history) >= 25 and sma_fast > sma_slow:
-                    signal_buy = True
-            elif self.strategy == "RSI_SCALPING":
-                if rsi <= 35:
-                    signal_buy = True
-            elif self.strategy == "GRID_TRADING":
-                # Buy when price dips 0.5% below recent average
-                if len(self.price_history) >= 10 and price < (sma_fast * 0.995):
-                    signal_buy = True
+            if len(self.price_history) >= 26:
+                prev_sma_fast = sum(self.price_history[-8:-1]) / 7.0
+                prev_sma_slow = sum(self.price_history[-26:-1]) / 25.0
+
+                # 1. MA Crossover: ONLY buy on true bullish crossover AND when RSI < 60 (Not Overbought)
+                if self.strategy == "MA_CROSSOVER":
+                    if (prev_sma_fast <= prev_sma_slow) and (sma_fast > sma_slow) and (rsi < 60):
+                        signal_buy = True
+
+                # 2. RSI Scalping: Buy when deeply oversold (RSI <= 30)
+                elif self.strategy == "RSI_SCALPING":
+                    if rsi <= 30:
+                        signal_buy = True
+
+                # 3. Grid Trading: Buy when price dips 0.8% below Fast SMA AND RSI < 45
+                elif self.strategy == "GRID_TRADING":
+                    if price < (sma_fast * 0.992) and rsi < 45:
+                        signal_buy = True
 
             if signal_buy and self.usdt_balance >= self.trade_amount:
                 amount_crypto = self.trade_amount / price
@@ -170,6 +188,7 @@ class TradingBotEngine:
 
                 self.active_position = {
                     "entry_price": price,
+                    "highest_price": price,
                     "amount": amount_crypto,
                     "timestamp": datetime.now().strftime("%H:%M:%S")
                 }
@@ -183,7 +202,7 @@ class TradingBotEngine:
                     "amount": amount_crypto,
                     "pnl": 0.0,
                     "pnl_pct": 0.0,
-                    "reason": "Signal Entry"
+                    "reason": f"Smart Entry ({self.strategy})"
                 }
                 self.trades.insert(0, trade_record)
 
