@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crypto Sentinel AI - Análise de Sentimento & Sinais</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">🧠</div>
+      <div>
+        <h1>Crypto Sentinel AI</h1>
+        <p>Análise de Notícias & Sinais de Mercado com Inteligência Artificial</p>
+      </div>
+    </div>
+    <div class="status-badge" id="statusBadge">
+      <div class="status-pulse"></div>
+      <span id="statusText">PARADO</span>
+    </div>
+  </header>
+
+  <div class="dashboard-grid">
+    <div class="card metric-card">
+      <span class="metric-title">Índice Fear & Greed</span>
+      <span class="metric-value text-purple" id="metricFearGreed">68 / 100</span>
+      <span class="metric-sub text-green" id="metricFearGreedText">GANÂNCIA</span>
+    </div>
+
+    <div class="card metric-card">
+      <span class="metric-title">Sentimento Geral do Mercado</span>
+      <span class="metric-value text-green" id="metricSentiment">BULLISH (+82%)</span>
+    </div>
+
+    <div class="card metric-card">
+      <span class="metric-title">Notícias Analisadas</span>
+      <span class="metric-value text-gold" id="metricArticles">0</span>
+    </div>
+
+    <div class="card metric-card">
+      <span class="metric-title">Sinais VIP Disparados</span>
+      <span class="metric-value text-purple" id="metricSignals">0</span>
+    </div>
+  </div>
+
+  <div class="main-content">
+    
+    <!-- News Feed Table -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>📰 Feed de Notícias & Análise de Impacto IA</h2>
+        <button class="btn btn-primary" id="btnScanNow" style="font-size: 13px;">🔍 Analisar Manchete Agora</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Fonte</th>
+              <th>Manchete Noticiosa</th>
+              <th>Análise IA</th>
+              <th>Impacto Estimado</th>
+            </tr>
+          </thead>
+          <tbody id="newsFeedBody">
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-muted);">A aguardar varredura de notícias... Clique em "Iniciar Varredura 24/7".</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="card">
+      <h2>⚙️ Controlo do Sentinela IA</h2>
+      <br>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <button type="button" class="btn btn-primary" id="btnToggleBot">
+          ▶ Iniciar Varredura 24/7
+        </button>
+        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+          O Sentinel AI monitoriza portais de notícias financeiras e redes sociais segundo a segundo. Quando uma notícia com impacto superior a 75% é lançada, dispara um <strong>Sinal VIP</strong> para entrada antecedida no mercado!
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Signals Log -->
+  <div class="card">
+    <h2>🎯 Log de Sinais VIP de Mercado (Entradas de Alta Confiança)</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Hora</th>
+            <th>Ativo Alvo</th>
+            <th>Sinal Disparado</th>
+            <th>Nível de Confiança IA</th>
+            <th>Gatilho / Notícia de Origem</th>
+          </tr>
+        </thead>
+        <tbody id="signalsLogBody">
+          <tr>
+            <td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum sinal VIP disparado ainda.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
