@@ -30,7 +30,7 @@ class AutoMineEngine:
             "BTC": {"name": "Bitcoin (SHA-256 Cloud)", "algo": "SHA-256", "base_reward_day": 16.10}
         }
         
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self._thread = None
 
     def calculate_profitability(self):
