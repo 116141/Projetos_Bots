@@ -1,3 +1,4 @@
+import os
 import time
 import random
 import threading
@@ -7,9 +8,9 @@ from datetime import datetime
 class DealHunterEngine:
     def __init__(self):
         self.is_running = False
-        self.telegram_bot_token = ""
-        self.telegram_chat_id = ""
-        self.amazon_tag = "edmilson-20"
+        self.telegram_bot_token = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+        self.telegram_chat_id = os.environ.get('TELEGRAM_CHAT_ID', '')
+        self.amazon_tag = os.environ.get('AMAZON_ASSOCIATE_TAG', 'edmilson-20')
         self.check_interval_seconds = 30
         
         # Stats
