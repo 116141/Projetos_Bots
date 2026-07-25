@@ -86,7 +86,7 @@ async function fetchStatus() {
         pnlPctElem.innerText = `${isPos ? '+' : ''}${data.net_pnl_pct.toFixed(2)}%`;
 
         document.getElementById('metricWinRate').innerText = `${data.win_rate.toFixed(1)}%`;
-        document.getElementById('metricTradesCount').innerText = `${data.total_trades_count} Operações Fechadas`;
+        document.getElementById('metricTradesCount').innerText = `🟢 ${data.winning_trades_count || 0} Certas | 🔴 ${data.losing_trades_count || 0} Falhadas`;
 
         document.getElementById('assetName').innerText = data.symbol;
         document.getElementById('metricLivePrice').innerText = `$${data.current_price.toLocaleString('en-US', {minimumFractionDigits: 2})}`;

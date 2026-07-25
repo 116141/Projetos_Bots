@@ -214,6 +214,7 @@ class TradingBotEngine:
             net_pnl_pct = (net_pnl / self.initial_balance) * 100
 
             wins = [t for t in self.trades if t['type'] == 'SELL' and t['pnl'] > 0]
+            losses = [t for t in self.trades if t['type'] == 'SELL' and t['pnl'] <= 0]
             total_closed = [t for t in self.trades if t['type'] == 'SELL']
             win_rate = (len(wins) / len(total_closed) * 100) if total_closed else 0.0
 
@@ -231,6 +232,9 @@ class TradingBotEngine:
                 "net_pnl": round(net_pnl, 2),
                 "net_pnl_pct": round(net_pnl_pct, 2),
                 "win_rate": round(win_rate, 1),
+                "winning_trades_count": len(wins),
+                "losing_trades_count": len(losses),
+                "total_closed_count": len(total_closed),
                 "total_trades_count": len(self.trades),
                 "active_position": self.active_position,
                 "price_history": list(self.price_history[-30:]),
