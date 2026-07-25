@@ -35,7 +35,7 @@
 
       <div style="height: 1px; background: var(--border-color); margin: 8px 0;"></div>
 
-      <div class="nav-item" data-view="bot_01" data-url="http://localhost:5000">
+      <div class="nav-item" data-view="bot_01" data-url="{{ bots.bot_01.url }}">
         <div class="nav-item-left">
           <span>🤖</span>
           <span>Bot 01: QuantTrader</span>
@@ -43,7 +43,7 @@
         <div class="status-dot" id="dot_bot_01"></div>
       </div>
 
-      <div class="nav-item" data-view="bot_02" data-url="http://localhost:5001">
+      <div class="nav-item" data-view="bot_02" data-url="{{ bots.bot_02.url }}">
         <div class="nav-item-left">
           <span>📢</span>
           <span>Bot 02: DealHunter</span>
@@ -51,7 +51,7 @@
         <div class="status-dot" id="dot_bot_02"></div>
       </div>
 
-      <div class="nav-item" data-view="bot_03" data-url="http://localhost:5002">
+      <div class="nav-item" data-view="bot_03" data-url="{{ bots.bot_03.url }}">
         <div class="nav-item-left">
           <span>🔄</span>
           <span>Bot 03: ArbitragePro</span>
@@ -59,7 +59,7 @@
         <div class="status-dot" id="dot_bot_03"></div>
       </div>
 
-      <div class="nav-item" data-view="bot_04" data-url="http://localhost:5003">
+      <div class="nav-item" data-view="bot_04" data-url="{{ bots.bot_04.url }}">
         <div class="nav-item-left">
           <span>⚡</span>
           <span>Bot 04: AutoMine AI</span>
@@ -67,7 +67,7 @@
         <div class="status-dot" id="dot_bot_04"></div>
       </div>
 
-      <div class="nav-item" data-view="bot_05" data-url="http://localhost:5004">
+      <div class="nav-item" data-view="bot_05" data-url="{{ bots.bot_05.url }}">
         <div class="nav-item-left">
           <span>🧠</span>
           <span>Bot 05: Sentinel AI</span>
@@ -105,7 +105,7 @@
               <span class="badge-status" id="card_status_bot_01">A VERIFICAR</span>
             </div>
             <p style="font-size: 13px; color: var(--text-muted);">Trading Algorítmico Conservador em Tempo Real com Trailing Stop & Filtros RSI.</p>
-            <button class="btn-open" onclick="switchView('bot_01', 'http://localhost:5000', '🤖 Bot 01: QuantTrader AI')">Abrir Painel do Bot 01</button>
+            <button class="btn-open" onclick="switchView('bot_01', '{{ bots.bot_01.url }}', '🤖 Bot 01: QuantTrader AI')">Abrir Painel do Bot 01</button>
           </div>
 
           <div class="bot-card">
@@ -114,7 +114,7 @@
               <span class="badge-status" id="card_status_bot_02">A VERIFICAR</span>
             </div>
             <p style="font-size: 13px; color: var(--text-muted);">Automação de Promoções & Links de Afiliados no Telegram para Renda Passiva.</p>
-            <button class="btn-open" onclick="switchView('bot_02', 'http://localhost:5001', '📢 Bot 02: DealHunter AI')">Abrir Painel do Bot 02</button>
+            <button class="btn-open" onclick="switchView('bot_02', '{{ bots.bot_02.url }}', '📢 Bot 02: DealHunter AI')">Abrir Painel do Bot 02</button>
           </div>
 
           <div class="bot-card">
@@ -123,7 +123,7 @@
               <span class="badge-status" id="card_status_bot_03">A VERIFICAR</span>
             </div>
             <p style="font-size: 13px; color: var(--text-muted);">Arbitragem Cripto Multi-Corretora em Tempo Real sem Risco de Mercado.</p>
-            <button class="btn-open" onclick="switchView('bot_03', 'http://localhost:5002', '🔄 Bot 03: ArbitragePro AI')">Abrir Painel do Bot 03</button>
+            <button class="btn-open" onclick="switchView('bot_03', '{{ bots.bot_03.url }}', '🔄 Bot 03: ArbitragePro AI')">Abrir Painel do Bot 03</button>
           </div>
 
           <div class="bot-card">
@@ -132,7 +132,7 @@
               <span class="badge-status" id="card_status_bot_04">A VERIFICAR</span>
             </div>
             <p style="font-size: 13px; color: var(--text-muted);">Mineração Inteligente com Alternância Automática (Auto-Switch) da Moeda Mais Lucrativa.</p>
-            <button class="btn-open" onclick="switchView('bot_04', 'http://localhost:5003', '⚡ Bot 04: AutoMine Profitability AI')">Abrir Painel do Bot 04</button>
+            <button class="btn-open" onclick="switchView('bot_04', '{{ bots.bot_04.url }}', '⚡ Bot 04: AutoMine Profitability AI')">Abrir Painel do Bot 04</button>
           </div>
 
           <div class="bot-card">
@@ -141,7 +141,7 @@
               <span class="badge-status" id="card_status_bot_05">A VERIFICAR</span>
             </div>
             <p style="font-size: 13px; color: var(--text-muted);">Análise de Sentimento de Notícias com IA & Disparo de Sinais VIP de Mercado.</p>
-            <button class="btn-open" onclick="switchView('bot_05', 'http://localhost:5004', '🧠 Bot 05: Crypto Sentinel AI')">Abrir Painel do Bot 05</button>
+            <button class="btn-open" onclick="switchView('bot_05', '{{ bots.bot_05.url }}', '🧠 Bot 05: Crypto Sentinel AI')">Abrir Painel do Bot 05</button>
           </div>
 
         </div>
