@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoMine Profitability AI - Bot de Mineração Inteligente</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <h1>AutoMine Profitability AI</h1>
+        <p>Alternância Automática & Maximização de Lucro de Mineração</p>
+      </div>
+    </div>
+    <div class="status-badge" id="statusBadge">
+      <div class="status-pulse"></div>
+      <span id="statusText">PARADO</span>
+    </div>
+  </header>
+
+  <div class="dashboard-grid">
+    <div class="card metric-card">
+      <span class="metric-title">Moeda Ativa em Mineração</span>
+      <span class="metric-value text-green" id="metricActiveCoin">KAS</span>
+      <span class="metric-sub text-muted" id="metricActiveAlgo">KHeavyHash</span>
+    </div>
+
+    <div class="card metric-card">
+      <span class="metric-title">Lucro Líquido Estimado / Dia</span>
+      <span class="metric-value text-green" id="metricNetDaily">$0.00 / dia</span>
+    </div>
+
+    <div class="card metric-card">
+      <span class="metric-title">Previsão Mensal Líquida</span>
+      <span class="metric-value text-gold" id="metricMonthlyEst">$0.00 / mês</span>
+    </div>
+
+    <div class="card metric-card">
+      <span class="metric-title">Consumo / Custo Energia</span>
+      <span class="metric-value text-orange" id="metricPower">600W</span>
+      <span class="metric-sub text-muted" id="metricElecCost">$0.12 / kWh</span>
+    </div>
+  </div>
+
+  <div class="main-content">
+    
+    <!-- Coin Rankings Table -->
+    <div class="card">
+      <h2>📊 Ranking de Rentabilidade por Moeda em Tempo Real</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Moeda / Algoritmo</th>
+              <th>Receita Bruta (24h)</th>
+              <th>Custo Energia (24h)</th>
+              <th>Lucro Líquido (24h)</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="coinRankingsBody">
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-muted);">Carregando cotações de mineração...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="card">
+      <h2>⚙️ Parâmetros do Rig de Mineração</h2>
+      <br>
+      <form id="configForm">
+        <div class="form-group">
+          <label>Potência do Rig (MH/s)</label>
+          <input type="number" class="form-control" id="inputHashrate" value="250" step="10">
+        </div>
+
+        <div class="form-group">
+          <label>Consumo Elétrico (Watts)</label>
+          <input type="number" class="form-control" id="inputWatts" value="600" step="50">
+        </div>
+
+        <div class="form-group">
+          <label>Custo da Eletricidade ($/kWh)</label>
+          <input type="number" class="form-control" id="inputElecCost" value="0.12" step="0.01">
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn btn-primary" id="btnToggleBot" style="flex: 1;">
+            ▶ Iniciar Mineração 24/7
+          </button>
+          <button type="submit" class="btn" style="background: rgba(255,255,255,0.08); color: white;">
+            💾 Salvar
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Switch History -->
+  <div class="card">
+    <h2>📋 Histórico de Trocas Automáticas de Algoritmo (Auto-Switch Log)</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Hora</th>
+            <th>Moeda Anterior</th>
+            <th>Nova Moeda (Mais Rentável)</th>
+            <th>Motivo da Troca</th>
+          </tr>
+        </thead>
+        <tbody id="switchLogBody">
+          <tr>
+            <td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhuma troca efetuada ainda. O bot seleciona automaticamente a moeda mais rentável.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
