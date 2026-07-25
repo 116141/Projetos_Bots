@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, jsonify, request
 from deal_engine import DealHunterEngine
 
@@ -38,8 +39,8 @@ def update_config():
     return jsonify({"status": "updated", "config": data})
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5001))
     print("==========================================================")
-    print("🚀 DEALHUNTER AI BOT - AFILIADOS TELEGRAM SERVIDOR WEB")
-    print("Acesse no navegador: http://localhost:5001")
+    print(f"🚀 DEALHUNTER AI BOT - AFILIADOS TELEGRAM SERVIDOR WEB (PORTA {port})")
     print("==========================================================")
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)

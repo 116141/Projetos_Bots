@@ -28,11 +28,11 @@ def save_users(users):
         json.dump(users, f, indent=2, ensure_ascii=False)
 
 BOT_SERVICES = {
-    "bot_01": {"name": "QuantTrader AI", "icon": "🤖", "port": 5000, "url": "http://localhost:5000"},
-    "bot_02": {"name": "DealHunter AI", "icon": "📢", "port": 5001, "url": "http://localhost:5001"},
-    "bot_03": {"name": "ArbitragePro AI", "icon": "🔄", "port": 5002, "url": "http://localhost:5002"},
-    "bot_04": {"name": "AutoMine Profitability AI", "icon": "⚡", "port": 5003, "url": "http://localhost:5003"},
-    "bot_05": {"name": "Crypto Sentinel AI", "icon": "🧠", "port": 5004, "url": "http://localhost:5004"}
+    "bot_01": {"name": "QuantTrader AI", "icon": "🤖", "port": 5000, "url": os.environ.get('BOT_01_URL', 'http://localhost:5000')},
+    "bot_02": {"name": "DealHunter AI", "icon": "📢", "port": 5001, "url": os.environ.get('BOT_02_URL', 'http://localhost:5001')},
+    "bot_03": {"name": "ArbitragePro AI", "icon": "🔄", "port": 5002, "url": os.environ.get('BOT_03_URL', 'http://localhost:5002')},
+    "bot_04": {"name": "AutoMine Profitability AI", "icon": "⚡", "port": 5003, "url": os.environ.get('BOT_04_URL', 'http://localhost:5003')},
+    "bot_05": {"name": "Crypto Sentinel AI", "icon": "🧠", "port": 5004, "url": os.environ.get('BOT_05_URL', 'http://localhost:5004')}
 }
 
 @app.route('/')
@@ -149,8 +149,8 @@ if __name__ == '__main__':
     if not os.path.exists(USERS_FILE):
         save_users(DEFAULT_USERS)
 
+    port = int(os.environ.get('PORT', 4999))
     print("==========================================================")
-    print("🌐 CENTRAL HUB BOT COMMAND CENTER - SERVIDOR MASTER (PORTA 4999)")
-    print("Acesse no navegador: http://localhost:4999")
+    print(f"🌐 CENTRAL HUB BOT COMMAND CENTER - SERVIDOR MASTER (PORTA {port})")
     print("==========================================================")
-    app.run(host='0.0.0.0', port=4999, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)

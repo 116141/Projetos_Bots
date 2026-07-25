@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, jsonify, request
 from sentinel_engine import CryptoSentinelEngine
 
@@ -28,8 +29,8 @@ def force_scan():
     return jsonify({"status": "success", "headline": headline})
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5004))
     print("==========================================================")
-    print("🚀 CRYPTO SENTINEL AI BOT - SERVIDOR WEB (PORTA 5004)")
-    print("Acesse no navegador: http://localhost:5004")
+    print(f"🚀 CRYPTO SENTINEL AI BOT - SERVIDOR WEB (PORTA {port})")
     print("==========================================================")
-    app.run(host='0.0.0.0', port=5004, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)

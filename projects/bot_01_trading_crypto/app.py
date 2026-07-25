@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, jsonify, request
 from bot_engine import TradingBotEngine
 
@@ -35,8 +36,8 @@ def update_config():
     return jsonify({"status": "updated", "config": data})
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
     print("==========================================================")
-    print("🚀 QUANTTRADER BOT DASHBOARD - INICIANDO SERVIDOR WEB...")
-    print("Acesse no navegador: http://localhost:5000")
+    print(f"🚀 QUANTTRADER BOT DASHBOARD - INICIANDO SERVIDOR WEB (PORTA {port})...")
     print("==========================================================")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)

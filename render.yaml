@@ -1,0 +1,88 @@
+services:
+  # --------------------------------------------------
+  # 00. Master Hub Portal
+  # --------------------------------------------------
+  - type: web
+    name: bot-00-hub-portal
+    env: python
+    region: frankfurt
+    plan: free
+    buildCommand: cd projects/bot_00_hub_portal && pip install -r requirements.txt
+    startCommand: cd projects/bot_00_hub_portal && gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+  # --------------------------------------------------
+  # 01. Bot QuantTrader AI (Trading Crypto)
+  # --------------------------------------------------
+  - type: web
+    name: bot-01-trading-crypto
+    env: python
+    region: frankfurt
+    plan: free
+    buildCommand: cd projects/bot_01_trading_crypto && pip install -r requirements.txt
+    startCommand: cd projects/bot_01_trading_crypto && gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+  # --------------------------------------------------
+  # 02. Bot DealHunter AI (Afiliados Telegram)
+  # --------------------------------------------------
+  - type: web
+    name: bot-02-afiliados-telegram
+    env: python
+    region: frankfurt
+    plan: free
+    buildCommand: cd projects/bot_02_afiliados_telegram && pip install -r requirements.txt
+    startCommand: cd projects/bot_02_afiliados_telegram && gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+
+  # --------------------------------------------------
+  # 03. Bot ArbitragePro AI (Arbitragem Crypto)
+  # --------------------------------------------------
+  - type: web
+    name: bot-03-arbitragem-crypto
+    env: python
+    region: frankfurt
+    plan: free
+    buildCommand: cd projects/bot_03_arbitragem_crypto && pip install -r requirements.txt
+    startCommand: cd projects/bot_03_arbitragem_crypto && gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+  # --------------------------------------------------
+  # 04. Bot AutoMine Profitability AI (Mineração Crypto)
+  # --------------------------------------------------
+  - type: web
+    name: bot-04-mineracao-crypto
+    env: python
+    region: frankfurt
+    plan: free
+    buildCommand: cd projects/bot_04_mineracao_crypto && pip install -r requirements.txt
+    startCommand: cd projects/bot_04_mineracao_crypto && gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+  # --------------------------------------------------
+  # 05. Bot Crypto Sentinel AI (Sentimento IA)
+  # --------------------------------------------------
+  - type: web
+    name: bot-05-sentimento-ia
+    env: python
+    region: frankfurt
+    plan: free
+    buildCommand: cd projects/bot_05_sentimento_ia && pip install -r requirements.txt
+    startCommand: cd projects/bot_05_sentimento_ia && gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0

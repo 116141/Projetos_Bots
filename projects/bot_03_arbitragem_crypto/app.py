@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, jsonify, request
 from arbitrage_engine import ArbitrageBotEngine
 
@@ -38,8 +39,8 @@ def update_config():
     return jsonify({"status": "updated", "config": data})
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5002))
     print("==========================================================")
-    print("🚀 ARBITRAGE PRO AI BOT - SERVIDOR WEB (PORTA 5002)")
-    print("Acesse no navegador: http://localhost:5002")
+    print(f"🚀 ARBITRAGE PRO AI BOT - SERVIDOR WEB (PORTA {port})")
     print("==========================================================")
-    app.run(host='0.0.0.0', port=5002, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)

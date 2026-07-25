@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, jsonify, request
 from mining_engine import AutoMineEngine
 
@@ -34,8 +35,8 @@ def update_config():
     return jsonify({"status": "updated", "config": data})
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5003))
     print("==========================================================")
-    print("🚀 AUTOMINE PROFITABILITY AI BOT - SERVIDOR WEB (PORTA 5003)")
-    print("Acesse no navegador: http://localhost:5003")
+    print(f"🚀 AUTOMINE PROFITABILITY AI BOT - SERVIDOR WEB (PORTA {port})")
     print("==========================================================")
-    app.run(host='0.0.0.0', port=5003, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)
