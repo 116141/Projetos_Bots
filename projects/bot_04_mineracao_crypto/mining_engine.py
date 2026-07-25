@@ -1,3 +1,4 @@
+import os
 import time
 import random
 import threading
@@ -7,12 +8,19 @@ from datetime import datetime
 class AutoMineEngine:
     def __init__(self):
         self.is_running = False
-        self.rig_hashrate_mhs = 250.0  # 250 MH/s Rig Hashrate
-        self.power_consumption_watts = 600.0  # 600W Power Consumption
-        self.electricity_cost_kwh = 0.12  # $0.12 per kWh
+        
+        # NiceHash API Credentials
+        self.nicehash_org_id = os.environ.get('NICEHASH_ORG_ID', '')
+        self.nicehash_api_key = os.environ.get('NICEHASH_API_KEY', '')
+        self.nicehash_api_secret = os.environ.get('NICEHASH_API_SECRET', '')
+        
+        # Hardware Rig Specs
+        self.rig_hashrate_mhs = float(os.environ.get('RIG_HASHRATE_MHS', 250.0))  # 250 MH/s Rig Hashrate
+        self.power_consumption_watts = float(os.environ.get('POWER_WATTS', 600.0))  # 600W Power Consumption
+        self.electricity_cost_kwh = float(os.environ.get('ELEC_COST_KWH', 0.12))  # $0.12 per kWh
         
         # Current active coin
-        self.active_coin = "KAS"
+        self.active_coin = "BTC"
         self.auto_switch_enabled = True
         
         # Stats
