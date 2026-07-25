@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArbitragePro AI - Bot de Arbitragem Cripto</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">🔄</div>
+      <div>
+        <h1>ArbitragePro AI</h1>
+        <p>Varredura & Arbitragem Multi-Corretora em Tempo Real</p>
+      </div>
+    </div>
+    <div class="status-badge" id="statusBadge">
+      <div class="status-pulse"></div>
+      <span id="statusText">PARADO</span>
+    </div>
+  </header>
+
+  <div class="dashboard-grid">
+    <div class="card metric-card">
+      <span class="metric-title">Saldo Total (Banca Simulação)</span>
+      <span class="metric-value text-cyan" id="metricEquity">$10,000.00</span>
+    </div>
+
+    <div class="card metric-card">
+      <span class="metric-title">Lucro de Arbitragem Acumulado</span>
+      <span class="metric-value text-green" id="metricProfit">+$0.00</span>
+    </div>
+
+    <div class="card metric-card">
+      <span class="metric-title">Oportunidades Detetadas</span>
+      <span class="metric-value text-gold" id="metricOpportunities">0</span>
+    </div>
+
+    <div class="card metric-card">
+      <span class="metric-title">Spread Mínimo Alvo</span>
+      <span class="metric-value" style="font-size: 24px;" id="metricMinSpread">0.4%</span>
+    </div>
+  </div>
+
+  <div class="main-content">
+    
+    <!-- Exchange Matrix -->
+    <div class="card">
+      <h2>🌐 Cotações em Direto por Corretora (<span id="assetSymbol">BTC/USDT</span>)</h2>
+      <div class="exchange-grid" id="exchangeGrid">
+        <div class="exchange-card"><span class="exchange-name">Binance</span><span class="exchange-price">--</span></div>
+        <div class="exchange-card"><span class="exchange-name">Bybit</span><span class="exchange-price">--</span></div>
+        <div class="exchange-card"><span class="exchange-name">KuCoin</span><span class="exchange-price">--</span></div>
+        <div class="exchange-card"><span class="exchange-name">Kraken</span><span class="exchange-price">--</span></div>
+        <div class="exchange-card"><span class="exchange-name">Gate.io</span><span class="exchange-price">--</span></div>
+      </div>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="card">
+      <h2>⚙️ Painel de Parâmetros de Arbitragem</h2>
+      <br>
+      <form id="configForm">
+        <div class="form-group">
+          <label>Par de Negociação</label>
+          <select class="form-control" id="selectSymbol">
+            <option value="BTC/USDT">BTC/USDT (Bitcoin)</option>
+            <option value="ETH/USDT">ETH/USDT (Ethereum)</option>
+            <option value="SOL/USDT">SOL/USDT (Solana)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Spread Mínimo Líquido (%)</label>
+          <input type="number" class="form-control" id="inputMinSpread" value="0.4" step="0.1" min="0.1">
+        </div>
+
+        <div class="form-group">
+          <label>Valor por Operação de Arbitragem ($)</label>
+          <input type="number" class="form-control" id="inputTradeAmount" value="1000" min="100" step="100">
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn btn-primary" id="btnToggleBot" style="flex: 1;">
+            ▶ Iniciar Arbitragem 24/7
+          </button>
+          <button type="submit" class="btn" style="background: rgba(255,255,255,0.08); color: white;">
+            💾 Salvar
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Executed Arbitrage Log -->
+  <div class="card">
+    <h2>📋 Oportunidades & Execuções de Arbitragem (Trade Log)</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Hora</th>
+            <th>Par</th>
+            <th>Corretora Compra (Menor Preço)</th>
+            <th>Corretora Venda (Maior Preço)</th>
+            <th>Spread Bruto</th>
+            <th>Spread Líquido (Sem Taxas)</th>
+            <th>Lucro Líquido ($)</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="tradeLogBody">
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--text-muted);">Nenhuma arbitragem executada ainda. Clique em "Iniciar Arbitragem 24/7".</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

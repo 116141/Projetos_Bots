@@ -1,0 +1,45 @@
+from flask import Flask, render_template, jsonify, request
+from arbitrage_engine import ArbitrageBotEngine
+
+app = Flask(__name__, static_folder='static', template_folder='templates')
+bot = ArbitrageBotEngine()
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/api/status', methods=['GET'])
+def get_status():
+    return jsonify(bot.get_status())
+
+@app.route('/api/start', methods=['POST'])
+def start_bot():
+    bot.start()
+    return jsonify({"status": "started", "is_running": bot.is_running})
+
+@app.route('/api/stop', methods=['POST'])
+def stop_bot():
+    bot.stop()
+    return jsonify({"status": "stopped", "is_running": bot.is_running})
+
+@app.route('/api/scan', methods=['POST'])
+def force_scan():
+    trade = bot.scan_arbitrage_opportunities()
+    return jsonify({"status": "success", "trade": trade})
+
+@app.route('/api/config', methods=['POST'])
+def update_config():
+    data = request.json or {}
+    symbol = data.get('symbol', 'BTC/USDT')
+    min_spread = float(data.get('min_spread', 0.4))
+    trade_amount = float(data.get('trade_amount', 1000.0))
+    
+    bot.update_config(symbol, min_spread, trade_amount)
+    return jsonify({"status": "updated", "config": data})
+
+if __name__ == '__main__':
+    print("==========================================================")
+    print("🚀 ARBITRAGE PRO AI BOT - SERVIDOR WEB (PORTA 5002)")
+    print("Acesse no navegador: http://localhost:5002")
+    print("==========================================================")
+    app.run(host='0.0.0.0', port=5002, debug=True)
