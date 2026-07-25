@@ -124,6 +124,26 @@ def delete_user():
         save_users(users)
     return jsonify({"status": "success", "users": users})
 
+@app.route('/api/users/change_password', methods=['POST'])
+def change_password():
+    if 'username' not in session:
+        return jsonify({"status": "error", "message": "Não autenticado!"}), 401
+
+    data = request.json or {}
+    new_password = str(data.get('new_password', '')).strip()
+
+    if not new_password:
+        return jsonify({"status": "error", "message": "A nova palavra-passe não pode estar vazia!"}), 400
+
+    users = load_users()
+    username = session['username']
+    if username in users:
+        users[username]['password'] = new_password
+        save_users(users)
+        return jsonify({"status": "success", "message": "Palavra-passe alterada com sucesso!"})
+
+    return jsonify({"status": "error", "message": "Utilizador não encontrado!"}), 404
+
 if __name__ == '__main__':
     # Initialize users DB if missing
     if not os.path.exists(USERS_FILE):
