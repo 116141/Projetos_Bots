@@ -15,11 +15,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (view === 'overview') {
                 showOverview();
+            } else if (view === 'users') {
+                showUsersView();
             } else {
                 switchView(view, url, title);
             }
         });
     });
+
+    const addUserForm = document.getElementById('addUserForm');
+    if (addUserForm) {
+        addUserForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('newUsername').value;
+            const name = document.getElementById('newName').value;
+            const password = document.getElementById('newPassword').value;
+            const role = document.getElementById('newRole').value;
+
+            try {
+                const res = await fetch('/api/users/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, name, password, role })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    alert('Utilizador criado com sucesso!');
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Erro ao criar utilizador!');
+                }
+            } catch (err) {
+                alert('Erro na comunicação com o servidor!');
+            }
+        });
+    }
 });
 
 function updateClock() {
@@ -30,18 +60,26 @@ function updateClock() {
 function showOverview() {
     document.getElementById('viewTitle').innerText = '🌐 Visão Geral do Hub (Todos os Bots)';
     document.getElementById('overviewView').style.display = 'block';
+    document.getElementById('usersView').style.display = 'none';
+    document.getElementById('botFrame').style.display = 'none';
+}
+
+function showUsersView() {
+    document.getElementById('viewTitle').innerText = '🔐 Gestão de Acesso & Utilizadores';
+    document.getElementById('overviewView').style.display = 'none';
+    document.getElementById('usersView').style.display = 'block';
     document.getElementById('botFrame').style.display = 'none';
 }
 
 function switchView(viewKey, url, title) {
     document.getElementById('viewTitle').innerText = title;
     document.getElementById('overviewView').style.display = 'none';
+    document.getElementById('usersView').style.display = 'none';
 
     const iframe = document.getElementById('botFrame');
     iframe.style.display = 'block';
     iframe.src = url;
 
-    // Highlight nav item
     document.querySelectorAll('.nav-item').forEach(i => {
         if (i.dataset.view === viewKey) {
             i.classList.add('active');
@@ -49,6 +87,33 @@ function switchView(viewKey, url, title) {
             i.classList.remove('active');
         }
     });
+}
+
+async function logout() {
+    if (confirm('Tem a certeza que deseja terminar sessão?')) {
+        await fetch('/api/logout', { method: 'POST' });
+        window.location.href = '/login';
+    }
+}
+
+async function deleteUser(username) {
+    if (confirm(`Tem a certeza que deseja eliminar o utilizador "${username}"?`)) {
+        try {
+            const res = await fetch('/api/users/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                window.location.reload();
+            } else {
+                alert(data.message || 'Erro ao eliminar utilizador!');
+            }
+        } catch (err) {
+            alert('Erro de comunicação!');
+        }
+    }
 }
 
 async function checkHubStatus() {

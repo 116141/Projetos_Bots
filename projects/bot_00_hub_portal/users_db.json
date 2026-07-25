@@ -1,0 +1,12 @@
+{
+  "admin": {
+    "password": "admin123",
+    "role": "ADMIN",
+    "name": "Edmilson (Administrador)"
+  },
+  "operador": {
+    "password": "operador123",
+    "role": "OPERATOR",
+    "name": "Operador Convidado"
+  }
+}

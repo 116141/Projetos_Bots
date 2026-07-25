@@ -26,6 +26,13 @@
         </div>
       </div>
 
+      <div class="nav-item" data-view="users">
+        <div class="nav-item-left">
+          <span>🔐</span>
+          <span>Gestão de Acesso</span>
+        </div>
+      </div>
+
       <div style="height: 1px; background: var(--border-color); margin: 8px 0;"></div>
 
       <div class="nav-item" data-view="bot_01" data-url="http://localhost:5000">
@@ -74,7 +81,16 @@
   <main class="main-wrapper">
     <div class="topbar">
       <h1 id="viewTitle">🌐 Visão Geral do Hub (Todos os Bots)</h1>
-      <span style="font-size: 13px; color: var(--text-muted);" id="liveClock">--:--:--</span>
+      
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <span style="font-size: 13px; color: var(--text-muted);" id="liveClock">--:--:--</span>
+        
+        <div style="display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 12px; border: 1px solid var(--border-color);">
+          <span style="font-size: 13px; font-weight: 600;">👤 {{ current_user.name }}</span>
+          <span class="badge-status active" style="font-size: 10px;">{{ current_user.role }}</span>
+          <button onclick="logout()" style="background: transparent; border: none; color: #ff5252; cursor: pointer; font-size: 13px; margin-left: 6px;" title="Terminar Sessão">🚪 Sair</button>
+        </div>
+      </div>
     </div>
 
     <div class="view-content" id="viewContent">
@@ -127,6 +143,85 @@
             <p style="font-size: 13px; color: var(--text-muted);">Análise de Sentimento de Notícias com IA & Disparo de Sinais VIP de Mercado.</p>
             <button class="btn-open" onclick="switchView('bot_05', 'http://localhost:5004', '🧠 Bot 05: Crypto Sentinel AI')">Abrir Painel do Bot 05</button>
           </div>
+
+        </div>
+      </div>
+
+      <!-- Access Management View -->
+      <div class="overview-container" id="usersView" style="display: none;">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+          
+          <div class="bot-card">
+            <h2>📋 Utilizadores Registados no Sistema</h2>
+            <div class="table-wrapper" style="margin-top: 16px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Utilizador</th>
+                    <th>Nome</th>
+                    <th>Nível de Acesso (Role)</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                  {% for u_key, u_data in users_db.items() %}
+                  <tr>
+                    <td><strong>{{ u_key }}</strong></td>
+                    <td>{{ u_data.name }}</td>
+                    <td><span class="badge-status {{ 'active' if u_data.role == 'ADMIN' else '' }}">{{ u_data.role }}</span></td>
+                    <td>
+                      {% if u_key != 'admin' and current_user.role == 'ADMIN' %}
+                      <button onclick="deleteUser('{{ u_key }}')" style="background: rgba(255,82,82,0.2); color: #ff5252; border: 1px solid #ff5252; padding: 4px 8px; border-radius: 6px; cursor: pointer;">Eliminar</button>
+                      {% else %}
+                      <span style="color: var(--text-muted); font-size: 11px;">Protegido</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {% if current_user.role == 'ADMIN' %}
+          <div class="bot-card">
+            <h2>➕ Criar Novo Utilizador</h2>
+            <br>
+            <form id="addUserForm">
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Utilizador (Username)</label>
+                <input type="text" class="form-control" id="newUsername" placeholder="ex: operador2" required>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Nome Completo</label>
+                <input type="text" class="form-control" id="newName" placeholder="ex: João Silva" required>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Palavra-passe</label>
+                <input type="password" class="form-control" id="newPassword" placeholder="••••••••" required>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label>Nível de Acesso (Role)</label>
+                <select class="form-control" id="newRole">
+                  <option value="OPERATOR">Operador (Apenas Leitura & Monitorização)</option>
+                  <option value="ADMIN">Administrador (Acesso Total & Controlo)</option>
+                </select>
+              </div>
+
+              <button type="submit" class="btn-open">💾 Guardar Novo Utilizador</button>
+            </form>
+          </div>
+          {% else %}
+          <div class="bot-card">
+            <h2>ℹ️ Informação de Permissão</h2>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+              Está com uma conta de <strong>Operador</strong>. Tem permissão para visualizar todos os dashboards e monitorizar métricas, mas a criação e gestão de utilizadores é restrita a Administradores.
+            </p>
+          </div>
+          {% endif %}
 
         </div>
       </div>
