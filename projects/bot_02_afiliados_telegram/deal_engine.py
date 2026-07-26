@@ -15,14 +15,14 @@ class DealHunterEngine:
         
         # Carregar do config.json se existir, senão usar variáveis de ambiente
         saved_config = self._load_config()
-        self.telegram_bot_token = saved_config.get('telegram_bot_token') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
-        self.telegram_chat_id = saved_config.get('telegram_chat_id') or os.environ.get('TELEGRAM_CHAT_ID', '')
+        self.telegram_bot_token = saved_config.get('telegram_bot_token') or os.environ.get('TELEGRAM_BOT_TOKEN', '8977525891:AAETvun3_qUkX4EUtq5VQcy5ckLI2QMq')
+        self.telegram_chat_id = saved_config.get('telegram_chat_id') or os.environ.get('TELEGRAM_CHAT_ID', '-1004315197983')
         
         # Tags de Afiliados Suportadas (Multi-Plataforma)
         self.amazon_tag = saved_config.get('amazon_tag') or os.environ.get('AMAZON_ASSOCIATE_TAG', 'gilsoncarvalh-21')
-        self.aliexpress_tag = os.environ.get('ALIEXPRESS_AFFILIATE_ID', 'edmilson_ali')
-        self.shopee_tag = os.environ.get('SHOPEE_AFFILIATE_ID', 'edmilson_shopee')
-        self.ebay_tag = os.environ.get('EBAY_CAMPAIGN_ID', 'edmilson_ebay')
+        self.aliexpress_tag = os.environ.get('ALIEXPRESS_AFFILIATE_ID', '')
+        self.shopee_tag = os.environ.get('SHOPEE_AFFILIATE_ID', '')
+        self.ebay_tag = os.environ.get('EBAY_CAMPAIGN_ID', '')
         
         self.check_interval_seconds = 30
         
