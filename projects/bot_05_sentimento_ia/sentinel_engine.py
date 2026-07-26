@@ -6,7 +6,7 @@ from datetime import datetime
 
 class CryptoSentinelEngine:
     def __init__(self):
-        self.is_running = False
+        self.is_running = True
         self.fear_greed_index = 68  # 0-100 (68 = Greed / Otimismo)
         self.overall_sentiment = "BULLISH"
         
@@ -27,7 +27,8 @@ class CryptoSentinelEngine:
         ]
         
         self._lock = threading.Lock()
-        self._thread = None
+        self._thread = threading.Thread(target=self._run_loop, daemon=True)
+        self._thread.start()
 
     def fetch_fear_and_greed(self):
         try:

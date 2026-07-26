@@ -7,7 +7,7 @@ from datetime import datetime
 
 class ArbitrageBotEngine:
     def __init__(self):
-        self.is_running = False
+        self.is_running = True
         self.symbol = "BTC/USDT"
         self.min_spread_pct = 0.4  # Minimum net profit threshold (%)
         self.trade_amount = 1000.0  # $ per arbitrage trade
@@ -30,7 +30,8 @@ class ArbitrageBotEngine:
         self.order_book_matrix = []
         
         self._lock = threading.Lock()
-        self._thread = None
+        self._thread = threading.Thread(target=self._run_loop, daemon=True)
+        self._thread.start()
 
     def fetch_live_exchange_prices(self):
         with self._lock:

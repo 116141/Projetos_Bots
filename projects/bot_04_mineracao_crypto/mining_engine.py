@@ -7,7 +7,7 @@ from datetime import datetime
 
 class AutoMineEngine:
     def __init__(self):
-        self.is_running = False
+        self.is_running = True
         
         # NiceHash API Credentials
         self.nicehash_org_id = os.environ.get('NICEHASH_ORG_ID', '')
@@ -39,7 +39,8 @@ class AutoMineEngine:
         }
         
         self._lock = threading.RLock()
-        self._thread = None
+        self._thread = threading.Thread(target=self._run_loop, daemon=True)
+        self._thread.start()
 
     def calculate_profitability(self):
         with self._lock:

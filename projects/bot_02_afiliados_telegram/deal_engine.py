@@ -7,7 +7,7 @@ from datetime import datetime
 
 class DealHunterEngine:
     def __init__(self):
-        self.is_running = False
+        self.is_running = True
         self.telegram_bot_token = os.environ.get('TELEGRAM_BOT_TOKEN', '')
         self.telegram_chat_id = os.environ.get('TELEGRAM_CHAT_ID', '')
         
@@ -26,7 +26,8 @@ class DealHunterEngine:
         self.posted_deals = []
         
         self._lock = threading.Lock()
-        self._thread = None
+        self._thread = threading.Thread(target=self._run_loop, daemon=True)
+        self._thread.start()
         
         # Base de Ofertas Demonstrativas & Scraping Multi-Plataforma
         self.sample_deals = [

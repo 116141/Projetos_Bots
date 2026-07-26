@@ -6,7 +6,7 @@ from datetime import datetime
 
 class TradingBotEngine:
     def __init__(self):
-        self.is_running = False
+        self.is_running = True
         self.symbol = "BTC/USDT"
         self.strategy = "MA_CROSSOVER"
         self.trade_amount = 500.0  # $ per trade
@@ -25,7 +25,8 @@ class TradingBotEngine:
         self.active_position = None  # Dict if long position open
         
         self._lock = threading.Lock()
-        self._thread = None
+        self._thread = threading.Thread(target=self._run_loop, daemon=True)
+        self._thread.start()
 
     def get_binance_symbol(self):
         return self.symbol.replace("/", "")
