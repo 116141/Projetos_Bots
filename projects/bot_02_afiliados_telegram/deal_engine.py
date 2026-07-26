@@ -121,29 +121,45 @@ class DealHunterEngine:
             }
         ]
 
+    def is_valid_affiliate_tag(self, tag):
+        """Verifica se a tag de afiliado é válida e não é vazia ou marcador temporário de exemplo"""
+        if not tag:
+            return False
+        tag_clean = str(tag).strip().lower()
+        placeholders = ["", "edmilson_ali", "edmilson_shopee", "edmilson_ebay", "edmilson-20", "ex:tag", "undefined", "none"]
+        return tag_clean not in placeholders
+
     def build_affiliate_link(self, raw_url, platform="Amazon"):
-        """Deteta automaticamente o domínio e injeta o ID de Afiliado correto"""
+        """Deteta o domínio e injeta o ID de Afiliado. Retorna (url_afiliado, tem_afiliado_valido)"""
         plat = platform.lower()
         url_lower = raw_url.lower()
         sep = "&" if "?" in raw_url else "?"
         
         # 1. Amazon (amazon.es, amazon.com, amzn.to)
         if "amazon" in url_lower or "amzn" in url_lower or "amazon" in plat:
-            return f"{raw_url}{sep}tag={self.amazon_tag}"
+            if self.is_valid_affiliate_tag(self.amazon_tag):
+                return f"{raw_url}{sep}tag={self.amazon_tag}", True
+            return raw_url, False
             
         # 2. Shopee (shopee.pt, shopee.com.br, shope.ee)
         elif "shopee" in url_lower or "shope" in url_lower or "shopee" in plat:
-            return f"{raw_url}{sep}af_siteid={self.shopee_tag}"
+            if self.is_valid_affiliate_tag(self.shopee_tag):
+                return f"{raw_url}{sep}af_siteid={self.shopee_tag}", True
+            return raw_url, False
             
         # 3. AliExpress (aliexpress.com, s.click.aliexpress.com)
         elif "aliexpress" in url_lower or "ali" in url_lower or "aliexpress" in plat:
-            return f"{raw_url}{sep}aff_fcid={self.aliexpress_tag}"
+            if self.is_valid_affiliate_tag(self.aliexpress_tag):
+                return f"{raw_url}{sep}aff_fcid={self.aliexpress_tag}", True
+            return raw_url, False
             
         # 4. eBay (ebay.com, ebay.es)
         elif "ebay" in url_lower or "ebay" in plat:
-            return f"{raw_url}{sep}campid={self.ebay_tag}"
+            if self.is_valid_affiliate_tag(self.ebay_tag):
+                return f"{raw_url}{sep}campid={self.ebay_tag}", True
+            return raw_url, False
             
-        return raw_url
+        return raw_url, False
 
     def start(self):
         with self._lock:
@@ -156,19 +172,21 @@ class DealHunterEngine:
         with self._lock:
             self.is_running = False
 
-    def update_config(self, bot_token, chat_id, amazon_tag, aliexpress_tag="edmilson_ali", shopee_tag="edmilson_shopee"):
+    def update_config(self, bot_token, chat_id, amazon_tag, aliexpress_tag="", shopee_tag=""):
         with self._lock:
             self.telegram_bot_token = bot_token
             self.telegram_chat_id = chat_id
             self.amazon_tag = amazon_tag
-            self.aliexpress_tag = aliexpress_tag
-            self.shopee_tag = shopee_tag
+            if aliexpress_tag:
+                self.aliexpress_tag = aliexpress_tag
+            if shopee_tag:
+                self.shopee_tag = shopee_tag
             self._save_config()
 
     def scan_for_deals(self):
         with self._lock:
             deal = random.choice(self.sample_deals)
-            affiliate_url = self.build_affiliate_link(deal['url'], deal.get('platform', 'Amazon'))
+            affiliate_url, has_valid_affiliate = self.build_affiliate_link(deal['url'], deal.get('platform', 'Amazon'))
             
             record = {
                 "id": len(self.posted_deals) + 1,
@@ -181,16 +199,19 @@ class DealHunterEngine:
                 "discount_pct": deal['discount_pct'],
                 "image_url": deal['image_url'],
                 "affiliate_url": affiliate_url,
+                "has_valid_affiliate": has_valid_affiliate,
                 "telegram_posted": False
             }
 
-            if self.telegram_bot_token and self.telegram_chat_id:
+            # REGRA ESTRITA: Apenas dispara para o Telegram se houver Tag de Afiliado VÁLIDA da plataforma!
+            if has_valid_affiliate and self.telegram_bot_token and self.telegram_chat_id:
                 sent = self._post_to_telegram(record)
                 record["telegram_posted"] = sent
 
             self.deals_found_count += 1
-            self.total_clicks += random.randint(3, 15)
-            self.estimated_commissions += round(deal['deal_price'] * 0.05, 2)
+            if has_valid_affiliate:
+                self.total_clicks += random.randint(3, 15)
+                self.estimated_commissions += round(deal['deal_price'] * 0.05, 2)
             self.posted_deals.insert(0, record)
             return record
 
