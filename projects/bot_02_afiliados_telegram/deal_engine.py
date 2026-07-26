@@ -183,9 +183,25 @@ class DealHunterEngine:
                 self.shopee_tag = shopee_tag
             self._save_config()
 
+    def get_active_deals_pool(self):
+        """Retorna apenas ofertas das plataformas que possuem ID de Afiliado VÁLIDO configurado"""
+        valid_pool = []
+        for deal in self.sample_deals:
+            plat = deal.get('platform', 'Amazon').lower()
+            if ("amazon" in plat or "amzn" in plat) and self.is_valid_affiliate_tag(self.amazon_tag):
+                valid_pool.append(deal)
+            elif ("shopee" in plat or "shope" in plat) and self.is_valid_affiliate_tag(self.shopee_tag):
+                valid_pool.append(deal)
+            elif ("aliexpress" in plat or "ali" in plat) and self.is_valid_affiliate_tag(self.aliexpress_tag):
+                valid_pool.append(deal)
+            elif "ebay" in plat and self.is_valid_affiliate_tag(self.ebay_tag):
+                valid_pool.append(deal)
+        return valid_pool if valid_pool else self.sample_deals
+
     def scan_for_deals(self):
         with self._lock:
-            deal = random.choice(self.sample_deals)
+            pool = self.get_active_deals_pool()
+            deal = random.choice(pool)
             affiliate_url, has_valid_affiliate = self.build_affiliate_link(deal['url'], deal.get('platform', 'Amazon'))
             
             record = {
