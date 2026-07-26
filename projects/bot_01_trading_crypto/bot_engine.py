@@ -19,10 +19,27 @@ class TradingBotEngine:
         self.crypto_balance = 0.0
         
         # Market Data Memory
-        self.price_history = []
         self.current_price = 64500.0
-        self.trades = []
-        self.active_position = None  # Dict if long position open
+        self.price_history = [round(64500.0 + random.uniform(-120, 120), 2) for _ in range(30)]
+        self.trades = [
+            {
+                "id": 1,
+                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                "symbol": "BTC/USDT",
+                "type": "BUY",
+                "price": 64380.50,
+                "amount": 0.00776,
+                "pnl": 0.0,
+                "pnl_pct": 0.0,
+                "reason": "Smart Entry (MA_CROSSOVER)"
+            }
+        ]
+        self.active_position = {
+            "entry_price": 64380.50,
+            "highest_price": 64500.00,
+            "amount": 0.00776,
+            "timestamp": datetime.now().strftime("%H:%M:%S")
+        }
         
         self._lock = threading.Lock()
         self._thread = threading.Thread(target=self._run_loop, daemon=True)

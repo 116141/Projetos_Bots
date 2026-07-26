@@ -102,9 +102,14 @@ async function fetchStatus() {
 
         // Update Chart
         if (data.price_history && data.price_history.length > 0) {
-            chart.data.labels = data.price_history.map((_, i) => i + 1);
+            const minP = Math.min(...data.price_history) - 20;
+            const maxP = Math.max(...data.price_history) + 20;
+            chart.options.scales.y.min = Math.floor(minP);
+            chart.options.scales.y.max = Math.ceil(maxP);
+            
+            chart.data.labels = data.price_history.map((_, i) => `${i + 1}s`);
             chart.data.datasets[0].data = data.price_history;
-            chart.update();
+            chart.update('none');
         }
 
         // Update Trade Log
