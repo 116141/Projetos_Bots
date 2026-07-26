@@ -122,17 +122,25 @@ class DealHunterEngine:
         ]
 
     def build_affiliate_link(self, raw_url, platform="Amazon"):
-        """Gera automaticamente o link de afiliado conforme a plataforma"""
+        """Deteta automaticamente o domínio e injeta o ID de Afiliado correto"""
         plat = platform.lower()
+        url_lower = raw_url.lower()
         sep = "&" if "?" in raw_url else "?"
         
-        if "amazon" in plat or "amazon" in raw_url.lower():
+        # 1. Amazon (amazon.es, amazon.com, amzn.to)
+        if "amazon" in url_lower or "amzn" in url_lower or "amazon" in plat:
             return f"{raw_url}{sep}tag={self.amazon_tag}"
-        elif "aliexpress" in plat or "aliexpress" in raw_url.lower():
-            return f"{raw_url}{sep}aff_fcid={self.aliexpress_tag}"
-        elif "shopee" in plat or "shopee" in raw_url.lower():
+            
+        # 2. Shopee (shopee.pt, shopee.com.br, shope.ee)
+        elif "shopee" in url_lower or "shope" in url_lower or "shopee" in plat:
             return f"{raw_url}{sep}af_siteid={self.shopee_tag}"
-        elif "ebay" in plat or "ebay" in raw_url.lower():
+            
+        # 3. AliExpress (aliexpress.com, s.click.aliexpress.com)
+        elif "aliexpress" in url_lower or "ali" in url_lower or "aliexpress" in plat:
+            return f"{raw_url}{sep}aff_fcid={self.aliexpress_tag}"
+            
+        # 4. eBay (ebay.com, ebay.es)
+        elif "ebay" in url_lower or "ebay" in plat:
             return f"{raw_url}{sep}campid={self.ebay_tag}"
             
         return raw_url
