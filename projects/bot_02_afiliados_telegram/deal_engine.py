@@ -32,31 +32,6 @@ class DealHunterEngine:
         self.estimated_commissions = 0.0
         self.posted_deals = []
         
-        self._lock = threading.Lock()
-        self._thread = threading.Thread(target=self._run_loop, daemon=True)
-        self._thread.start()
-
-    def _load_config(self):
-        if os.path.exists(CONFIG_FILE):
-            try:
-                with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-            except Exception:
-                pass
-        return {}
-
-    def _save_config(self):
-        try:
-            cfg = {
-                "telegram_bot_token": self.telegram_bot_token,
-                "telegram_chat_id": self.telegram_chat_id,
-                "amazon_tag": self.amazon_tag
-            }
-            with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-                json.dump(cfg, f, indent=2)
-        except Exception:
-            pass
-        
         # Base de Ofertas Demonstrativas & Scraping Multi-Plataforma
         self.sample_deals = [
             {
@@ -120,6 +95,31 @@ class DealHunterEngine:
                 "url": "https://es.aliexpress.com/item/1005006500293010.html"
             }
         ]
+
+        self._lock = threading.Lock()
+        self._thread = threading.Thread(target=self._run_loop, daemon=True)
+        self._thread.start()
+
+    def _load_config(self):
+        if os.path.exists(CONFIG_FILE):
+            try:
+                with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return {}
+
+    def _save_config(self):
+        try:
+            cfg = {
+                "telegram_bot_token": self.telegram_bot_token,
+                "telegram_chat_id": self.telegram_chat_id,
+                "amazon_tag": self.amazon_tag
+            }
+            with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+                json.dump(cfg, f, indent=2)
+        except Exception:
+            pass
 
     def is_valid_affiliate_tag(self, tag):
         """Verifica se a tag de afiliado é válida e não é vazia ou marcador temporário de exemplo"""
