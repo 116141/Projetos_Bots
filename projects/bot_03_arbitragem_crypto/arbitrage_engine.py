@@ -1,3 +1,4 @@
+import os
 import time
 import random
 import threading
@@ -10,6 +11,12 @@ class ArbitrageBotEngine:
         self.symbol = "BTC/USDT"
         self.min_spread_pct = 0.4  # Minimum net profit threshold (%)
         self.trade_amount = 1000.0  # $ per arbitrage trade
+        
+        # API Keys para Corretoras (Binance / Bybit / KuCoin)
+        self.binance_api_key = os.environ.get('BINANCE_API_KEY', '')
+        self.binance_secret_key = os.environ.get('BINANCE_SECRET_KEY', '')
+        self.bybit_api_key = os.environ.get('BYBIT_API_KEY', '')
+        self.bybit_secret_key = os.environ.get('BYBIT_SECRET_KEY', '')
         
         # Stats
         self.initial_balance = 10000.0
