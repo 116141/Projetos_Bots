@@ -33,9 +33,11 @@ def update_config():
     data = request.json or {}
     bot_token = data.get('telegram_bot_token', '')
     chat_id = data.get('telegram_chat_id', '')
-    amazon_tag = data.get('amazon_tag', 'edmilson-20')
+    amazon_tag = data.get('amazon_tag', 'gilsoncarvalh-21')
+    aliexpress_tag = data.get('aliexpress_tag', '')
+    shopee_tag = data.get('shopee_tag', '')
     
-    bot.update_config(bot_token, chat_id, amazon_tag)
+    bot.update_config(bot_token, chat_id, amazon_tag, aliexpress_tag, shopee_tag)
     return jsonify({"status": "updated", "config": data})
 
 if __name__ == '__main__':
