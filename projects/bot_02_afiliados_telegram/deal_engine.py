@@ -5,14 +5,21 @@ import threading
 import requests
 from datetime import datetime
 
+import json
+
+CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'config.json')
+
 class DealHunterEngine:
     def __init__(self):
         self.is_running = True
-        self.telegram_bot_token = os.environ.get('TELEGRAM_BOT_TOKEN', '')
-        self.telegram_chat_id = os.environ.get('TELEGRAM_CHAT_ID', '')
+        
+        # Carregar do config.json se existir, senão usar variáveis de ambiente
+        saved_config = self._load_config()
+        self.telegram_bot_token = saved_config.get('telegram_bot_token') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
+        self.telegram_chat_id = saved_config.get('telegram_chat_id') or os.environ.get('TELEGRAM_CHAT_ID', '')
         
         # Tags de Afiliados Suportadas (Multi-Plataforma)
-        self.amazon_tag = os.environ.get('AMAZON_ASSOCIATE_TAG', 'edmilson-20')
+        self.amazon_tag = saved_config.get('amazon_tag') or os.environ.get('AMAZON_ASSOCIATE_TAG', 'gilsoncarvalh-21')
         self.aliexpress_tag = os.environ.get('ALIEXPRESS_AFFILIATE_ID', 'edmilson_ali')
         self.shopee_tag = os.environ.get('SHOPEE_AFFILIATE_ID', 'edmilson_shopee')
         self.ebay_tag = os.environ.get('EBAY_CAMPAIGN_ID', 'edmilson_ebay')
@@ -28,6 +35,27 @@ class DealHunterEngine:
         self._lock = threading.Lock()
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
         self._thread.start()
+
+    def _load_config(self):
+        if os.path.exists(CONFIG_FILE):
+            try:
+                with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return {}
+
+    def _save_config(self):
+        try:
+            cfg = {
+                "telegram_bot_token": self.telegram_bot_token,
+                "telegram_chat_id": self.telegram_chat_id,
+                "amazon_tag": self.amazon_tag
+            }
+            with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+                json.dump(cfg, f, indent=2)
+        except Exception:
+            pass
         
         # Base de Ofertas Demonstrativas & Scraping Multi-Plataforma
         self.sample_deals = [
@@ -127,6 +155,7 @@ class DealHunterEngine:
             self.amazon_tag = amazon_tag
             self.aliexpress_tag = aliexpress_tag
             self.shopee_tag = shopee_tag
+            self._save_config()
 
     def scan_for_deals(self):
         with self._lock:
