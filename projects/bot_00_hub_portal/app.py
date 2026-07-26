@@ -8,9 +8,12 @@ app.secret_key = os.urandom(24)
 
 USERS_FILE = os.path.join(os.path.dirname(__file__), 'users_db.json')
 
-# Default users if file doesn't exist
+# Default users if file doesn't exist or overridden by env vars
+admin_user = os.environ.get('ADMIN_USERNAME', 'fernandesgil26')
+admin_pass = os.environ.get('ADMIN_PASSWORD', 'R2BT9?k{jsI7')
+
 DEFAULT_USERS = {
-    "admin": {"password": "admin123", "role": "ADMIN", "name": "Edmilson (Administrador)"},
+    admin_user: {"password": admin_pass, "role": "ADMIN", "name": "Edmilson Gil (Administrador)"},
     "operador": {"password": "operador123", "role": "OPERATOR", "name": "Operador Convidado"}
 }
 
