@@ -258,7 +258,15 @@ class DealHunterEngine:
             self.scan_for_deals()
             time.sleep(self.check_interval_seconds)
 
+    def ensure_thread_running(self):
+        """Garante que a thread em segundo plano está viva dentro do processo Gunicorn"""
+        with self._lock:
+            if self.is_running and (self._thread is None or not self._thread.is_alive()):
+                self._thread = threading.Thread(target=self._run_loop, daemon=True)
+                self._thread.start()
+
     def get_status(self):
+        self.ensure_thread_running()
         with self._lock:
             return {
                 "is_running": self.is_running,

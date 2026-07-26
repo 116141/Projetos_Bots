@@ -133,7 +133,15 @@ class ArbitrageBotEngine:
                 return trade_record
         return None
 
+    def ensure_thread_running(self):
+        """Garante que a thread em segundo plano está viva dentro do processo Gunicorn"""
+        with self._lock:
+            if self.is_running and (self._thread is None or not self._thread.is_alive()):
+                self._thread = threading.Thread(target=self._run_loop, daemon=True)
+                self._thread.start()
+
     def get_status(self):
+        self.ensure_thread_running()
         with self._lock:
             total_equity = self.initial_balance + self.total_profit
             return {

@@ -116,7 +116,15 @@ class AutoMineEngine:
             self.calculate_profitability()
             time.sleep(2)
 
+    def ensure_thread_running(self):
+        """Garante que a thread em segundo plano está viva dentro do processo Gunicorn"""
+        with self._lock:
+            if self.is_running and (self._thread is None or not self._thread.is_alive()):
+                self._thread = threading.Thread(target=self._run_loop, daemon=True)
+                self._thread.start()
+
     def get_status(self):
+        self.ensure_thread_running()
         with self._lock:
             coin_rankings = self.calculate_profitability()
             active_info = next((c for c in coin_rankings if c["ticker"] == self.active_coin), coin_rankings[0])
