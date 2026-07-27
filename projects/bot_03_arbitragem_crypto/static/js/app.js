@@ -59,8 +59,17 @@ async function fetchStatus() {
         document.getElementById('dualBalancesSub').innerText = `Binance: $${binanceB.toFixed(2)} | Bybit: $${bybitB.toFixed(2)}`;
         document.getElementById('metricExchangesSub').innerHTML = `💛 Binance: $${binanceB.toFixed(2)}<br>🖤 Bybit: $${bybitB.toFixed(2)}`;
 
-        if (data.trading_mode) {
+        if (data.trading_mode && document.activeElement !== document.getElementById('selectTradingMode')) {
             document.getElementById('selectTradingMode').value = data.trading_mode;
+        }
+        if (data.symbol && document.activeElement !== document.getElementById('selectSymbol')) {
+            document.getElementById('selectSymbol').value = data.symbol;
+        }
+        if (data.min_spread_pct !== undefined && document.activeElement !== document.getElementById('inputMinSpread')) {
+            document.getElementById('inputMinSpread').value = data.min_spread_pct;
+        }
+        if (data.trade_amount !== undefined && document.activeElement !== document.getElementById('inputTradeAmount')) {
+            document.getElementById('inputTradeAmount').value = data.trade_amount;
         }
 
         rawTradesList = data.executed_trades || [];
