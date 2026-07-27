@@ -36,6 +36,10 @@ async function fetchStatus() {
         document.getElementById('metricMinSpread').innerText = `${data.min_spread_pct}%`;
         document.getElementById('assetSymbol').innerText = data.symbol;
 
+        if (data.trading_mode) {
+            document.getElementById('selectTradingMode').value = data.trading_mode;
+        }
+
         renderExchangeGrid(data.latest_prices);
         renderTradeLog(data.executed_trades);
 
@@ -96,6 +100,7 @@ async function toggleBotState() {
 async function saveConfig(e) {
     e.preventDefault();
     const config = {
+        trading_mode: document.getElementById('selectTradingMode').value,
         symbol: document.getElementById('selectSymbol').value,
         min_spread: parseFloat(document.getElementById('inputMinSpread').value),
         trade_amount: parseFloat(document.getElementById('inputTradeAmount').value)
@@ -107,6 +112,6 @@ async function saveConfig(e) {
         body: JSON.stringify(config)
     });
 
-    alert('Configurações de Arbitragem salvas com sucesso!');
+    alert(`Modo de Operação (${config.trading_mode === 'LIVE' ? 'CONTA REAL' : 'BANCA SIMULADA'}) e parâmetros salvos com sucesso!`);
     fetchStatus();
 }

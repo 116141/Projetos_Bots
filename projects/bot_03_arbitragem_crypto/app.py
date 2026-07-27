@@ -34,8 +34,9 @@ def update_config():
     symbol = data.get('symbol', 'BTC/USDT')
     min_spread = float(data.get('min_spread', 0.4))
     trade_amount = float(data.get('trade_amount', 1000.0))
+    trading_mode = data.get('trading_mode', 'SIMULATION')
     
-    bot.update_config(symbol, min_spread, trade_amount)
+    bot.update_config(symbol, min_spread, trade_amount, trading_mode)
     return jsonify({"status": "updated", "config": data})
 
 if __name__ == '__main__':

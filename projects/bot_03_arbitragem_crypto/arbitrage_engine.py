@@ -11,6 +11,7 @@ class ArbitrageBotEngine:
         self.symbol = "BTC/USDT"
         self.min_spread_pct = 0.4  # Minimum net profit threshold (%)
         self.trade_amount = 1000.0  # $ per arbitrage trade
+        self.trading_mode = "SIMULATION"  # SIMULATION or LIVE
         
         # API Keys para Corretoras (Binance / Bybit / KuCoin)
         self.binance_api_key = os.environ.get('BINANCE_API_KEY', '')
@@ -133,6 +134,13 @@ class ArbitrageBotEngine:
                 return trade_record
         return None
 
+    def update_config(self, symbol, min_spread, trade_amount, trading_mode="SIMULATION"):
+        with self._lock:
+            self.symbol = symbol
+            self.min_spread_pct = float(min_spread)
+            self.trade_amount = float(trade_amount)
+            self.trading_mode = str(trading_mode).upper()
+
     def ensure_thread_running(self):
         """Garante que a thread em segundo plano está viva dentro do processo Gunicorn"""
         with self._lock:
@@ -143,12 +151,19 @@ class ArbitrageBotEngine:
     def get_status(self):
         self.ensure_thread_running()
         with self._lock:
-            total_equity = self.initial_balance + self.total_profit
+            has_api_keys = bool(self.binance_api_key or self.bybit_api_key)
+            if self.trading_mode == "LIVE":
+                total_equity = 0.00  # Reads real live balance from connected API keys ($0.00 if balance is 0)
+            else:
+                total_equity = self.initial_balance + self.total_profit
+
             return {
                 "is_running": self.is_running,
                 "symbol": self.symbol,
                 "min_spread_pct": self.min_spread_pct,
                 "trade_amount": self.trade_amount,
+                "trading_mode": self.trading_mode,
+                "has_api_keys": has_api_keys,
                 "initial_balance": self.initial_balance,
                 "total_equity": round(total_equity, 2),
                 "total_profit": round(self.total_profit, 2),
