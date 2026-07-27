@@ -115,8 +115,12 @@ class ArbitrageBotEngine:
             self.is_running = False
 
     def _run_loop(self):
-        while self.is_running:
-            self.scan_arbitrage_opportunities()
+        while True:
+            if self.is_running:
+                try:
+                    self.scan_arbitrage_opportunities()
+                except Exception as e:
+                    self.last_execution_status = f"⚠️ Erro no loop: {str(e)}"
             time.sleep(2)
 
     def execute_real_bybit_order(self, symbol, side, qty_usd, current_price=65000.0):
