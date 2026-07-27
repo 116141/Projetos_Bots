@@ -23,9 +23,15 @@ class ArbitrageBotEngine:
         self.initial_balance = 10000.0
         self.total_profit = 325.05
         self.opportunities_found = 43
+        
+        # Dual Exchange Real Balances
+        self.binance_balance = 0.0
+        self.bybit_balance = 0.0
+        
         self.executed_trades = [
             {
                 "id": 1,
+                "date": datetime.now().strftime("%Y-%m-%d"),
                 "timestamp": datetime.now().strftime("%H:%M:%S"),
                 "symbol": "BTC/USDT",
                 "buy_exchange": "Bybit",
@@ -79,13 +85,6 @@ class ArbitrageBotEngine:
         with self._lock:
             self.is_running = False
 
-    def update_config(self, symbol, min_spread, trade_amount):
-        with self._lock:
-            if self.symbol != symbol:
-                self.symbol = symbol
-            self.min_spread_pct = float(min_spread)
-            self.trade_amount = float(trade_amount)
-
     def _run_loop(self):
         while self.is_running:
             self.scan_arbitrage_opportunities()
@@ -119,6 +118,7 @@ class ArbitrageBotEngine:
 
                 trade_record = {
                     "id": len(self.executed_trades) + 1,
+                    "date": datetime.now().strftime("%Y-%m-%d"),
                     "timestamp": datetime.now().strftime("%H:%M:%S"),
                     "symbol": self.symbol,
                     "buy_exchange": buy_ex,
@@ -128,7 +128,7 @@ class ArbitrageBotEngine:
                     "gross_spread_pct": round(raw_spread_pct, 2),
                     "net_spread_pct": round(net_spread_pct, 2),
                     "net_profit": round(net_profit_dollar, 2),
-                    "status": "EXECUTED"
+                    "status": "EXECUTADO"
                 }
                 self.executed_trades.insert(0, trade_record)
                 return trade_record
@@ -136,10 +136,18 @@ class ArbitrageBotEngine:
 
     def update_config(self, symbol, min_spread, trade_amount, trading_mode="SIMULATION"):
         with self._lock:
+            new_mode = str(trading_mode).upper()
+            # Se alterou de SIMULADO para CONTA REAL -> Limpa o painel e reseta do zero!
+            if self.trading_mode != new_mode:
+                self.trading_mode = new_mode
+                if new_mode == "LIVE":
+                    self.total_profit = 0.0
+                    self.opportunities_found = 0
+                    self.executed_trades = []
+
             self.symbol = symbol
             self.min_spread_pct = float(min_spread)
             self.trade_amount = float(trade_amount)
-            self.trading_mode = str(trading_mode).upper()
 
     def ensure_thread_running(self):
         """Garante que a thread em segundo plano está viva dentro do processo Gunicorn"""
@@ -153,7 +161,7 @@ class ArbitrageBotEngine:
         with self._lock:
             has_api_keys = bool(self.binance_api_key or self.bybit_api_key)
             if self.trading_mode == "LIVE":
-                total_equity = 0.00  # Reads real live balance from connected API keys ($0.00 if balance is 0)
+                total_equity = self.binance_balance + self.bybit_balance
             else:
                 total_equity = self.initial_balance + self.total_profit
 
@@ -164,10 +172,12 @@ class ArbitrageBotEngine:
                 "trade_amount": self.trade_amount,
                 "trading_mode": self.trading_mode,
                 "has_api_keys": has_api_keys,
+                "binance_balance": round(self.binance_balance, 2),
+                "bybit_balance": round(self.bybit_balance, 2),
                 "initial_balance": self.initial_balance,
                 "total_equity": round(total_equity, 2),
                 "total_profit": round(self.total_profit, 2),
                 "opportunities_found": self.opportunities_found,
                 "latest_prices": self.latest_prices,
-                "executed_trades": self.executed_trades[:20]
+                "executed_trades": self.executed_trades[:50]
             }

@@ -24,8 +24,9 @@
 
   <div class="dashboard-grid">
     <div class="card metric-card">
-      <span class="metric-title">Saldo Total (Banca Simulação)</span>
+      <span class="metric-title" id="equityTitle">Saldo Total Consolidado</span>
       <span class="metric-value text-cyan" id="metricEquity">$10,000.00</span>
+      <span style="font-size: 11px; color: var(--text-muted);" id="dualBalancesSub">Binance: $0.00 | Bybit: $0.00</span>
     </div>
 
     <div class="card metric-card">
@@ -39,8 +40,10 @@
     </div>
 
     <div class="card metric-card">
-      <span class="metric-title">Spread Mínimo Alvo</span>
-      <span class="metric-value" style="font-size: 24px;" id="metricMinSpread">0.4%</span>
+      <span class="metric-title">Banca Binance / Bybit</span>
+      <span class="metric-value" style="font-size: 16px; color: #ffb74d;" id="metricExchangesSub">
+        💛 Binance: $0.00<br>🖤 Bybit: $0.00
+      </span>
     </div>
   </div>
 
@@ -105,7 +108,19 @@
 
   <!-- Executed Arbitrage Log -->
   <div class="card">
-    <h2>📋 Oportunidades & Execuções de Arbitragem (Trade Log)</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <h2>📋 Oportunidades & Execuções de Arbitragem (Trade Log)</h2>
+      
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <label style="font-size: 13px; color: var(--text-muted);">📅 Filtro de Período:</label>
+        <select id="selectPeriodFilter" class="form-control" style="width: auto; padding: 4px 10px; font-size: 13px;">
+          <option value="TODOS">Todo o Histórico</option>
+          <option value="HOJE">Hoje</option>
+          <option value="7_DIAS">Últimos 7 Dias</option>
+          <option value="30_DIAS">Últimos 30 Dias</option>
+        </select>
+      </div>
+    </div>
     <div class="table-wrapper">
       <table>
         <thead>

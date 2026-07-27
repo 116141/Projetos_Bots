@@ -1,4 +1,5 @@
 let isBotRunning = false;
+let rawTradesList = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchStatus();
@@ -6,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btnToggleBot').addEventListener('click', toggleBotState);
     document.getElementById('configForm').addEventListener('submit', saveConfig);
+    document.getElementById('selectPeriodFilter').addEventListener('change', filterAndRenderTrades);
 });
 
 async function fetchStatus() {
@@ -30,22 +32,52 @@ async function fetchStatus() {
             toggleBtn.innerText = '▶ Iniciar Arbitragem 24/7';
         }
 
+        const isLiveMode = (data.trading_mode === 'LIVE');
+        document.getElementById('equityTitle').innerText = isLiveMode ? 'Saldo Total Consolidado (CONTA REAL)' : 'Saldo Total (Banca Simulação)';
         document.getElementById('metricEquity').innerText = `$${data.total_equity.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
         document.getElementById('metricProfit').innerText = `+$${data.total_profit.toFixed(2)}`;
         document.getElementById('metricOpportunities').innerText = data.opportunities_found;
-        document.getElementById('metricMinSpread').innerText = `${data.min_spread_pct}%`;
         document.getElementById('assetSymbol').innerText = data.symbol;
+
+        const binanceB = data.binance_balance || 0.0;
+        const bybitB = data.bybit_balance || 0.0;
+        document.getElementById('dualBalancesSub').innerText = `Binance: $${binanceB.toFixed(2)} | Bybit: $${bybitB.toFixed(2)}`;
+        document.getElementById('metricExchangesSub').innerHTML = `💛 Binance: $${binanceB.toFixed(2)}<br>🖤 Bybit: $${bybitB.toFixed(2)}`;
 
         if (data.trading_mode) {
             document.getElementById('selectTradingMode').value = data.trading_mode;
         }
 
+        rawTradesList = data.executed_trades || [];
         renderExchangeGrid(data.latest_prices);
-        renderTradeLog(data.executed_trades);
+        filterAndRenderTrades();
 
     } catch (err) {
         console.error('Erro ao buscar status de arbitragem:', err);
     }
+}
+
+function filterAndRenderTrades() {
+    const period = document.getElementById('selectPeriodFilter').value;
+    const now = new Date();
+    
+    let filtered = rawTradesList.filter(t => {
+        if (!t.date || period === 'TODOS') return true;
+        
+        const tradeDate = new Date(t.date);
+        const diffDays = (now - tradeDate) / (1000 * 3600 * 24);
+
+        if (period === 'HOJE') {
+            return t.date === now.toISOString().split('T')[0];
+        } else if (period === '7_DIAS') {
+            return diffDays <= 7;
+        } else if (period === '30_DIAS') {
+            return diffDays <= 30;
+        }
+        return true;
+    });
+
+    renderTradeLog(filtered);
 }
 
 function renderExchangeGrid(prices) {
