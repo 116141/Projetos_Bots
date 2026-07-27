@@ -96,6 +96,13 @@ class ArbitrageBotEngine:
         if not prices:
             return None
 
+        # No modo CONTA REAL (LIVE), se o saldo for $0.00, NÃO executa nem regista arbitragens simuladas!
+        with self._lock:
+            if self.trading_mode == "LIVE":
+                live_balance = self.binance_balance + self.bybit_balance
+                if live_balance <= 0:
+                    return None
+
         # Find Lowest Buy Price & Highest Sell Price
         buy_ex = min(prices, key=prices.get)
         sell_ex = max(prices, key=prices.get)
@@ -137,10 +144,12 @@ class ArbitrageBotEngine:
     def update_config(self, symbol, min_spread, trade_amount, trading_mode="SIMULATION"):
         with self._lock:
             new_mode = str(trading_mode).upper()
-            # Se alterou de SIMULADO para CONTA REAL -> Limpa o painel e reseta do zero!
-            if self.trading_mode != new_mode:
-                self.trading_mode = new_mode
-                if new_mode == "LIVE":
+            self.trading_mode = new_mode
+
+            # Se está em CONTA REAL e o saldo real é $0.00 -> Mantém o painel a $0.00 sem dados fakes!
+            if new_mode == "LIVE":
+                live_balance = self.binance_balance + self.bybit_balance
+                if live_balance <= 0:
                     self.total_profit = 0.0
                     self.opportunities_found = 0
                     self.executed_trades = []
