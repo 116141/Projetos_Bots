@@ -106,7 +106,7 @@ class ArbitrageBotEngine:
             self.scan_arbitrage_opportunities()
             time.sleep(2)
 
-    def execute_real_bybit_order(self, symbol, side, qty_usd):
+    def execute_real_bybit_order(self, symbol, side, qty_usd, current_price=65000.0):
         """Executa uma ordem REAL no mercado Spot da Bybit via API V5"""
         if not (self.bybit_api_key and self.bybit_secret_key):
             return False, "Chaves API da Bybit ausentes"
@@ -120,12 +120,20 @@ class ArbitrageBotEngine:
             timestamp = str(int(time.time() * 1000))
             recv_window = "5000"
             
+            # Para COMPRA (Buy), qty é o valor em USDT (ex: 5.0 USDT)
+            # Para VENDA (Sell), qty é a quantidade exata em BTC (ex: 5.0 / 65000 = 0.00007692 BTC)
+            if side == "Buy":
+                qty_str = str(round(qty_usd, 2))
+            else:
+                btc_qty = qty_usd / float(current_price)
+                qty_str = f"{btc_qty:.8f}"
+            
             body_dict = {
                 "category": "spot",
                 "symbol": symbol_fmt,
                 "side": side,
                 "orderType": "Market",
-                "qty": str(round(qty_usd, 2))
+                "qty": qty_str
             }
             body_json = json.dumps(body_dict)
             
@@ -180,7 +188,7 @@ class ArbitrageBotEngine:
 
                     if net_spread_pct >= self.min_spread_pct:
                         side_bybit = "Buy" if buy_ex == "Bybit" else "Sell"
-                        success, _ = self.execute_real_bybit_order(self.symbol, side_bybit, self.trade_amount)
+                        success, _ = self.execute_real_bybit_order(self.symbol, side_bybit, self.trade_amount, current_price=buy_price)
 
                         if success:
                             with self._lock:
@@ -218,7 +226,7 @@ class ArbitrageBotEngine:
             if net_spread_pct >= self.min_spread_pct:
                 if has_bybit_funds and ("Bybit" in [buy_ex, sell_ex]):
                     side = "Buy" if buy_ex == "Bybit" else "Sell"
-                    success, _ = self.execute_real_bybit_order(self.symbol, side, self.trade_amount)
+                    success, _ = self.execute_real_bybit_order(self.symbol, side, self.trade_amount, current_price=buy_price)
                     if success:
                         with self._lock:
                             self.opportunities_found += 1
