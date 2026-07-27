@@ -267,14 +267,14 @@ class ArbitrageBotEngine:
                 # Sub-caso A: Bybit está MAIS BARATA do que a outra corretora -> COMPRA na Bybit!
                 if bybit_price < other_price:
                     raw_spread_pct = ((other_price - bybit_price) / bybit_price) * 100
-                    net_spread_pct = raw_spread_pct - 0.2
+                    net_spread_pct = raw_spread_pct
 
-                    if net_spread_pct >= self.min_spread_pct:
-                        success, _ = self.execute_real_bybit_order(self.symbol, "Buy", self.trade_amount, current_price=bybit_price)
+                    if raw_spread_pct >= self.min_spread_pct:
+                        success, details = self.execute_real_bybit_order(self.symbol, "Buy", self.trade_amount, current_price=bybit_price)
                         if success:
                             with self._lock:
                                 self.opportunities_found += 1
-                                net_profit_dollar = (self.trade_amount * (net_spread_pct / 100))
+                                net_profit_dollar = (self.trade_amount * (raw_spread_pct / 100))
                                 self.total_profit += net_profit_dollar
 
                                 trade_record = {
@@ -297,14 +297,14 @@ class ArbitrageBotEngine:
                 # Sub-caso B: Bybit está MAIS CARA do que a outra corretora -> VENDA na Bybit!
                 elif bybit_price > other_price:
                     raw_spread_pct = ((bybit_price - other_price) / other_price) * 100
-                    net_spread_pct = raw_spread_pct - 0.2
+                    net_spread_pct = raw_spread_pct
 
-                    if net_spread_pct >= self.min_spread_pct:
-                        success, _ = self.execute_real_bybit_order(self.symbol, "Sell", self.trade_amount, current_price=other_price)
+                    if raw_spread_pct >= self.min_spread_pct:
+                        success, details = self.execute_real_bybit_order(self.symbol, "Sell", self.trade_amount, current_price=other_price)
                         if success:
                             with self._lock:
                                 self.opportunities_found += 1
-                                net_profit_dollar = (self.trade_amount * (net_spread_pct / 100))
+                                net_profit_dollar = (self.trade_amount * (raw_spread_pct / 100))
                                 self.total_profit += net_profit_dollar
 
                                 trade_record = {
