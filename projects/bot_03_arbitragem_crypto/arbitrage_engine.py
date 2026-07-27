@@ -48,12 +48,15 @@ class ArbitrageBotEngine:
                     cfg = json.load(f)
                     self.trading_mode = cfg.get('trading_mode', 'LIVE')
                     self.symbol = cfg.get('symbol', 'BTC/USDT')
-                    self.min_spread_pct = float(cfg.get('min_spread_pct', 0.2))
-                    self.trade_amount = float(cfg.get('trade_amount', 5.0))
+                    self.min_spread_pct = float(cfg.get('min_spread_pct', 0.1))
+                    self.trade_amount = float(cfg.get('trade_amount', 9.0))
                     if cfg.get('bybit_api_key'):
                         self.bybit_api_key = cfg.get('bybit_api_key')
                     if cfg.get('bybit_secret_key'):
                         self.bybit_secret_key = cfg.get('bybit_secret_key')
+                    self.total_profit = float(cfg.get('total_profit', 0.0))
+                    self.opportunities_found = int(cfg.get('opportunities_found', 0))
+                    self.executed_trades = cfg.get('executed_trades', [])
             except Exception:
                 pass
 
@@ -65,7 +68,10 @@ class ArbitrageBotEngine:
                 'min_spread_pct': self.min_spread_pct,
                 'trade_amount': self.trade_amount,
                 'bybit_api_key': self.bybit_api_key,
-                'bybit_secret_key': self.bybit_secret_key
+                'bybit_secret_key': self.bybit_secret_key,
+                'total_profit': round(self.total_profit, 2),
+                'opportunities_found': self.opportunities_found,
+                'executed_trades': self.executed_trades[:100]
             }
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(cfg, f, indent=2)
@@ -292,6 +298,7 @@ class ArbitrageBotEngine:
                                     "status": "REAL EXECUTADO"
                                 }
                                 self.executed_trades.insert(0, trade_record)
+                                self._save_config()
                                 return trade_record
 
                 # Sub-caso B: Bybit está MAIS CARA do que a outra corretora -> VENDA na Bybit!
@@ -322,6 +329,7 @@ class ArbitrageBotEngine:
                                     "status": "REAL EXECUTADO"
                                 }
                                 self.executed_trades.insert(0, trade_record)
+                                self._save_config()
                                 return trade_record
             return None
 
@@ -368,12 +376,10 @@ class ArbitrageBotEngine:
 
     def update_config(self, symbol, min_spread, trade_amount, trading_mode="LIVE", reset_now=False, bybit_api_key=None, bybit_secret_key=None):
         with self._lock:
-            new_mode = str(trading_mode).upper()
-            mode_changed = (self.trading_mode != new_mode)
-            self.trading_mode = new_mode
+            self.trading_mode = str(trading_mode).upper()
 
-            # Se mudou para CONTA REAL ou se pediu reset -> Limpa todo o histórico anterior!
-            if new_mode == "LIVE" and (mode_changed or reset_now or self.total_profit > 100):
+            # APENAS reseta se o utilizador clicar explicitamente no botão "Limpar Painel" (reset_now=True)!
+            if reset_now:
                 self.total_profit = 0.0
                 self.opportunities_found = 0
                 self.executed_trades = []
