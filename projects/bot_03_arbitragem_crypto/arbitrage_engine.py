@@ -1,4 +1,5 @@
 import os
+import json
 import time
 import random
 import threading
@@ -7,11 +8,12 @@ from datetime import datetime
 
 class ArbitrageBotEngine:
     def __init__(self):
+        self.config_file = os.path.join(os.path.dirname(__file__), 'config.json')
         self.is_running = True
         self.symbol = "BTC/USDT"
-        self.min_spread_pct = 0.4  # Minimum net profit threshold (%)
-        self.trade_amount = 1000.0  # $ per arbitrage trade
-        self.trading_mode = "SIMULATION"  # SIMULATION or LIVE
+        self.min_spread_pct = 0.2  # Minimum net profit threshold (%)
+        self.trade_amount = 5.0  # $ per arbitrage trade
+        self.trading_mode = "LIVE"  # Default to LIVE mode
         
         # API Keys para Corretoras (Binance / Bybit / KuCoin)
         self.binance_api_key = os.environ.get('BINANCE_API_KEY', '')
@@ -21,33 +23,47 @@ class ArbitrageBotEngine:
         
         # Stats
         self.initial_balance = 10000.0
-        self.total_profit = 325.05
-        self.opportunities_found = 43
+        self.total_profit = 0.0
+        self.opportunities_found = 0
         
         # Dual Exchange Real Balances
         self.binance_balance = 0.0
-        self.bybit_balance = 0.0
-        
-        self.executed_trades = [
-            {
-                "id": 1,
-                "date": datetime.now().strftime("%Y-%m-%d"),
-                "timestamp": datetime.now().strftime("%H:%M:%S"),
-                "symbol": "BTC/USDT",
-                "buy_exchange": "Bybit",
-                "sell_exchange": "Kraken",
-                "buy_price": 64030.83,
-                "sell_price": 64480.20,
-                "spread_gross_pct": 0.70,
-                "spread_net_pct": 0.50,
-                "net_profit_usd": 5.00,
-                "status": "EXECUTADO"
-            }
-        ]
+        self.bybit_balance = 9.43
+        self.executed_trades = []
         
         # Exchange Price State
         self.exchanges = ["Binance", "Bybit", "KuCoin", "Kraken", "Gate.io"]
         self.latest_prices = {}
+        
+        self._lock = threading.Lock()
+        self._load_config()
+        self._thread = threading.Thread(target=self._run_loop, daemon=True)
+        self._thread.start()
+
+    def _load_config(self):
+        if os.path.exists(self.config_file):
+            try:
+                with open(self.config_file, 'r', encoding='utf-8') as f:
+                    cfg = json.load(f)
+                    self.trading_mode = cfg.get('trading_mode', 'LIVE')
+                    self.symbol = cfg.get('symbol', 'BTC/USDT')
+                    self.min_spread_pct = float(cfg.get('min_spread_pct', 0.2))
+                    self.trade_amount = float(cfg.get('trade_amount', 5.0))
+            except Exception:
+                pass
+
+    def _save_config(self):
+        try:
+            cfg = {
+                'trading_mode': self.trading_mode,
+                'symbol': self.symbol,
+                'min_spread_pct': self.min_spread_pct,
+                'trade_amount': self.trade_amount
+            }
+            with open(self.config_file, 'w', encoding='utf-8') as f:
+                json.dump(cfg, f, indent=2)
+        except Exception:
+            pass
         self.order_book_matrix = []
         
         self._lock = threading.Lock()
@@ -268,7 +284,7 @@ class ArbitrageBotEngine:
             self.opportunities_found = 0
             self.executed_trades = []
 
-    def update_config(self, symbol, min_spread, trade_amount, trading_mode="SIMULATION", reset_now=False):
+    def update_config(self, symbol, min_spread, trade_amount, trading_mode="LIVE", reset_now=False):
         with self._lock:
             new_mode = str(trading_mode).upper()
             mode_changed = (self.trading_mode != new_mode)
@@ -283,6 +299,7 @@ class ArbitrageBotEngine:
             self.symbol = symbol
             self.min_spread_pct = float(min_spread)
             self.trade_amount = float(trade_amount)
+            self._save_config()
 
     def fetch_real_exchange_balances(self):
         """Busca o saldo real das contas via API Bybit V5 e Binance API"""
