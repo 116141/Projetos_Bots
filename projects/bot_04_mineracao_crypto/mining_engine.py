@@ -1,4 +1,5 @@
 import os
+import json
 import time
 import random
 import threading
@@ -7,6 +8,7 @@ from datetime import datetime
 
 class AutoMineEngine:
     def __init__(self):
+        self.config_file = os.path.join(os.path.dirname(__file__), 'config.json')
         self.is_running = True
         
         # NiceHash API Credentials
@@ -15,9 +17,9 @@ class AutoMineEngine:
         self.nicehash_api_secret = os.environ.get('NICEHASH_API_SECRET', '')
         
         # Hardware Rig Specs
-        self.rig_hashrate_mhs = float(os.environ.get('RIG_HASHRATE_MHS', 250.0))  # 250 MH/s Rig Hashrate
-        self.power_consumption_watts = float(os.environ.get('POWER_WATTS', 600.0))  # 600W Power Consumption
-        self.electricity_cost_kwh = float(os.environ.get('ELEC_COST_KWH', 0.12))  # $0.12 per kWh
+        self.rig_hashrate_mhs = float(os.environ.get('RIG_HASHRATE_MHS', 250.0))
+        self.power_consumption_watts = float(os.environ.get('POWER_WATTS', 600.0))
+        self.electricity_cost_kwh = float(os.environ.get('ELEC_COST_KWH', 0.12))
         
         # Current active coin
         self.active_coin = "BTC"
@@ -39,8 +41,36 @@ class AutoMineEngine:
         }
         
         self._lock = threading.RLock()
+        self._load_config()
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
         self._thread.start()
+
+    def _load_config(self):
+        if os.path.exists(self.config_file):
+            try:
+                with open(self.config_file, 'r', encoding='utf-8') as f:
+                    cfg = json.load(f)
+                    self.active_coin = cfg.get('active_coin', 'BTC')
+                    self.auto_switch_enabled = bool(cfg.get('auto_switch_enabled', True))
+                    self.rig_hashrate_mhs = float(cfg.get('rig_hashrate_mhs', 250.0))
+                    self.power_consumption_watts = float(cfg.get('power_consumption_watts', 600.0))
+                    self.electricity_cost_kwh = float(cfg.get('electricity_cost_kwh', 0.12))
+            except Exception:
+                pass
+
+    def _save_config(self):
+        try:
+            cfg = {
+                'active_coin': self.active_coin,
+                'auto_switch_enabled': self.auto_switch_enabled,
+                'rig_hashrate_mhs': self.rig_hashrate_mhs,
+                'power_consumption_watts': self.power_consumption_watts,
+                'electricity_cost_kwh': self.electricity_cost_kwh
+            }
+            with open(self.config_file, 'w', encoding='utf-8') as f:
+                json.dump(cfg, f, indent=2)
+        except Exception:
+            pass
 
     def calculate_profitability(self):
         with self._lock:
@@ -110,6 +140,7 @@ class AutoMineEngine:
             self.power_consumption_watts = float(watts)
             self.electricity_cost_kwh = float(elec_cost)
             self.auto_switch_enabled = bool(auto_switch)
+            self._save_config()
 
     def _run_loop(self):
         while self.is_running:

@@ -1,3 +1,5 @@
+import os
+import json
 import time
 import random
 import threading
@@ -6,9 +8,11 @@ from datetime import datetime
 
 class CryptoSentinelEngine:
     def __init__(self):
+        self.config_file = os.path.join(os.path.dirname(__file__), 'config.json')
         self.is_running = True
         self.fear_greed_index = 68  # 0-100 (68 = Greed / Otimismo)
         self.overall_sentiment = "BULLISH"
+        self.min_impact_threshold = 0.5
         
         # Stats
         self.signals_emitted_count = 0
@@ -27,8 +31,28 @@ class CryptoSentinelEngine:
         ]
         
         self._lock = threading.Lock()
+        self._load_config()
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
         self._thread.start()
+
+    def _load_config(self):
+        if os.path.exists(self.config_file):
+            try:
+                with open(self.config_file, 'r', encoding='utf-8') as f:
+                    cfg = json.load(f)
+                    self.min_impact_threshold = float(cfg.get('min_impact_threshold', 0.5))
+            except Exception:
+                pass
+
+    def _save_config(self):
+        try:
+            cfg = {
+                'min_impact_threshold': self.min_impact_threshold
+            }
+            with open(self.config_file, 'w', encoding='utf-8') as f:
+                json.dump(cfg, f, indent=2)
+        except Exception:
+            pass
 
     def fetch_fear_and_greed(self):
         try:

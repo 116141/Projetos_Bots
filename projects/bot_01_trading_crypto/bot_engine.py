@@ -1,3 +1,5 @@
+import os
+import json
 import time
 import threading
 import random
@@ -6,14 +8,16 @@ from datetime import datetime
 
 class TradingBotEngine:
     def __init__(self):
+        self.config_file = os.path.join(os.path.dirname(__file__), 'config.json')
         self.is_running = True
         self.symbol = "BTC/USDT"
         self.strategy = "MA_CROSSOVER"
-        self.trade_amount = 500.0  # $ per trade
+        self.trade_amount = 10.0  # $ per trade
         self.take_profit_pct = 2.0  # %
         self.stop_loss_pct = 1.0    # %
+        self.trading_mode = "LIVE"
         
-        # Paper Trading Portfolio State
+        # Portfolio State
         self.initial_balance = 10000.0
         self.usdt_balance = 10000.0
         self.crypto_balance = 0.0
@@ -21,29 +25,42 @@ class TradingBotEngine:
         # Market Data Memory
         self.current_price = 64500.0
         self.price_history = [round(64500.0 + random.uniform(-120, 120), 2) for _ in range(30)]
-        self.trades = [
-            {
-                "id": 1,
-                "timestamp": datetime.now().strftime("%H:%M:%S"),
-                "symbol": "BTC/USDT",
-                "type": "BUY",
-                "price": 64380.50,
-                "amount": 0.00776,
-                "pnl": 0.0,
-                "pnl_pct": 0.0,
-                "reason": "Smart Entry (MA_CROSSOVER)"
-            }
-        ]
-        self.active_position = {
-            "entry_price": 64380.50,
-            "highest_price": 64500.00,
-            "amount": 0.00776,
-            "timestamp": datetime.now().strftime("%H:%M:%S")
-        }
+        self.trades = []
+        self.active_position = None
         
         self._lock = threading.Lock()
+        self._load_config()
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
         self._thread.start()
+
+    def _load_config(self):
+        if os.path.exists(self.config_file):
+            try:
+                with open(self.config_file, 'r', encoding='utf-8') as f:
+                    cfg = json.load(f)
+                    self.trading_mode = cfg.get('trading_mode', 'LIVE')
+                    self.symbol = cfg.get('symbol', 'BTC/USDT')
+                    self.strategy = cfg.get('strategy', 'MA_CROSSOVER')
+                    self.trade_amount = float(cfg.get('trade_amount', 10.0))
+                    self.take_profit_pct = float(cfg.get('take_profit_pct', 2.0))
+                    self.stop_loss_pct = float(cfg.get('stop_loss_pct', 1.0))
+            except Exception:
+                pass
+
+    def _save_config(self):
+        try:
+            cfg = {
+                'trading_mode': self.trading_mode,
+                'symbol': self.symbol,
+                'strategy': self.strategy,
+                'trade_amount': self.trade_amount,
+                'take_profit_pct': self.take_profit_pct,
+                'stop_loss_pct': self.stop_loss_pct
+            }
+            with open(self.config_file, 'w', encoding='utf-8') as f:
+                json.dump(cfg, f, indent=2)
+        except Exception:
+            pass
 
     def get_binance_symbol(self):
         return self.symbol.replace("/", "")
@@ -108,7 +125,7 @@ class TradingBotEngine:
         with self._lock:
             self.is_running = False
 
-    def update_config(self, symbol, strategy, trade_amount, take_profit, stop_loss):
+    def update_config(self, symbol, strategy, trade_amount, take_profit, stop_loss, trading_mode="LIVE"):
         with self._lock:
             if self.symbol != symbol:
                 self.symbol = symbol
@@ -117,6 +134,8 @@ class TradingBotEngine:
             self.trade_amount = float(trade_amount)
             self.take_profit_pct = float(take_profit)
             self.stop_loss_pct = float(stop_loss)
+            self.trading_mode = str(trading_mode).upper()
+            self._save_config()
 
     def _run_loop(self):
         while self.is_running:
