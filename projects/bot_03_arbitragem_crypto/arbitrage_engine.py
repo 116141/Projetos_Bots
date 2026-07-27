@@ -143,15 +143,11 @@ class ArbitrageBotEngine:
 
         # No modo CONTA REAL (LIVE):
         if self.trading_mode == "LIVE":
-            # Filtra apenas as corretoras ativas com API (Binance e Bybit)
-            prices = {k: v for k, v in prices.items() if k in ["Binance", "Bybit"]}
-            if len(prices) < 2:
-                return None
-
             live_balance = self.binance_balance + self.bybit_balance
             if live_balance <= 0:
                 return None
 
+            # Encontra a menor e maior cotação entre todas as 5 corretoras
             buy_ex = min(prices, key=prices.get)
             sell_ex = max(prices, key=prices.get)
             buy_price = prices[buy_ex]
@@ -161,12 +157,12 @@ class ArbitrageBotEngine:
             raw_spread_pct = (raw_spread / buy_price) * 100
             net_spread_pct = raw_spread_pct - 0.2
 
-            if net_spread_pct >= self.min_spread_pct:
-                # Tenta executar a ordem REAL na Bybit se Bybit for uma das pontas
+            # Se a Bybit for uma das pontas e o spread for lucrativo -> Dispara ordem REAL na Bybit!
+            if net_spread_pct >= self.min_spread_pct and ("Bybit" in [buy_ex, sell_ex]):
                 side = "Buy" if buy_ex == "Bybit" else "Sell"
                 success, details = self.execute_real_bybit_order(self.symbol, side, self.trade_amount)
                 
-                # APENAS SE A ORDEM REAL FOR CONFIRMADA PELA BYBIT É QUE CONTABILIZA O LUCRO!
+                # APENAS SE A ORDEM REAL FOR CONFIRMADA PELA BYBIT É QUE REGISTA NO PAINEL!
                 if success:
                     with self._lock:
                         self.opportunities_found += 1
