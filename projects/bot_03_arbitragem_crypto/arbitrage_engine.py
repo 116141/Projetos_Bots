@@ -84,24 +84,76 @@ class ArbitrageBotEngine:
         self._thread.start()
 
     def fetch_live_exchange_prices(self):
-        with self._lock:
-            # Base price simulation anchored to real market trend
+        symbol_fmt = self.symbol.replace("/", "")       # e.g. BTCUSDT
+        symbol_dash = self.symbol.replace("/", "-")     # e.g. BTC-USDT
+        symbol_slash = self.symbol                      # e.g. BTC/USDT
+        prices = {}
+
+        # --- Binance ---
+        try:
+            res = requests.get(f"https://api.binance.com/api/v3/ticker/price?symbol={symbol_fmt}", timeout=3)
+            if res.status_code == 200:
+                prices["Binance"] = float(res.json()["price"])
+        except Exception:
+            pass
+
+        # --- Bybit ---
+        try:
+            res = requests.get(f"https://api.bybit.com/v5/market/tickers?category=spot&symbol={symbol_fmt}", timeout=3)
+            if res.status_code == 200:
+                lst = res.json().get("result", {}).get("list", [])
+                if lst:
+                    prices["Bybit"] = float(lst[0]["lastPrice"])
+        except Exception:
+            pass
+
+        # --- KuCoin ---
+        try:
+            res = requests.get(f"https://api.kucoin.com/api/v1/market/orderbook/level1?symbol={symbol_dash}", timeout=3)
+            if res.status_code == 200:
+                data = res.json().get("data", {})
+                if data and data.get("price"):
+                    prices["KuCoin"] = float(data["price"])
+        except Exception:
+            pass
+
+        # --- Kraken ---
+        try:
+            kraken_sym = "XBTUSDT" if "BTC" in self.symbol else symbol_fmt
+            res = requests.get(f"https://api.kraken.com/0/public/Ticker?pair={kraken_sym}", timeout=3)
+            if res.status_code == 200:
+                result = res.json().get("result", {})
+                if result:
+                    ticker = list(result.values())[0]
+                    prices["Kraken"] = float(ticker["c"][0])
+        except Exception:
+            pass
+
+        # --- Gate.io ---
+        try:
+            gate_sym = self.symbol.replace("/", "_")
+            res = requests.get(f"https://api.gateio.ws/api/v4/spot/tickers?currency_pair={gate_sym}", timeout=3)
+            if res.status_code == 200:
+                lst = res.json()
+                if lst:
+                    prices["Gate.io"] = float(lst[0]["last"])
+        except Exception:
+            pass
+
+        # Fallback: se nao conseguiu precos reais de suficientes corretoras, usa Binance como base
+        if len(prices) < 2:
             try:
-                symbol_fmt = self.symbol.replace("/", "")
                 res = requests.get(f"https://api.binance.com/api/v3/ticker/price?symbol={symbol_fmt}", timeout=3)
-                base_price = float(res.json()['price']) if res.status_code == 200 else 64500.0
+                base = float(res.json()["price"]) if res.status_code == 200 else 65000.0
             except Exception:
-                base_price = 64500.0 if "BTC" in self.symbol else 3450.0
-
-            # Generate micro-variations across different exchanges
-            prices = {}
+                base = 65000.0
             for ex in self.exchanges:
-                # Spread variation between -0.6% and +0.7%
-                var = random.uniform(-0.006, 0.007)
-                prices[ex] = round(base_price * (1 + var), 2)
+                if ex not in prices:
+                    prices[ex] = round(base * (1 + random.uniform(-0.003, 0.003)), 2)
 
+        with self._lock:
             self.latest_prices = prices
-            return prices
+        return prices
 
     def start(self):
         with self._lock:
