@@ -399,6 +399,11 @@ class ArbitrageBotEngine:
 
     def fetch_real_exchange_balances(self):
         """Busca o saldo real das contas via API Bybit V5 e Binance API"""
+        now = time.time()
+        if hasattr(self, '_last_balance_check') and (now - getattr(self, '_last_balance_check', 0) < 10):
+            return
+        self._last_balance_check = now
+
         if self.bybit_api_key and self.bybit_secret_key:
             try:
                 import hmac

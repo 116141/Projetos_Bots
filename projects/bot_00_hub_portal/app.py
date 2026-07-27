@@ -76,7 +76,7 @@ def get_hub_status():
     status_summary = {}
     for key, info in BOT_SERVICES.items():
         try:
-            res = requests.get(f"{info['url']}/api/status", timeout=1.5)
+            res = requests.get(f"{info['url']}/api/status", timeout=5.0)
             if res.status_code == 200:
                 data = res.json()
                 status_summary[key] = {
