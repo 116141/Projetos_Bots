@@ -31,13 +31,25 @@ def force_scan():
     trade = bot.scan_arbitrage_opportunities()
     return jsonify({"status": "success", "trade": trade})
 
+def safe_float(val, default_val=0.1):
+    try:
+        if val is None:
+            return default_val
+        if isinstance(val, (int, float)):
+            return float(val)
+        clean_str = str(val).replace(',', '.').strip()
+        num = float(clean_str)
+        return num if num == num else default_val
+    except Exception:
+        return default_val
+
 @app.route('/api/config', methods=['POST'])
 def update_config():
     data = request.json or {}
     symbol = data.get('symbol', 'BTC/USDT')
-    min_spread = float(data.get('min_spread', 0.4))
-    trade_amount = float(data.get('trade_amount', 1000.0))
-    trading_mode = data.get('trading_mode', 'SIMULATION')
+    min_spread = safe_float(data.get('min_spread'), 0.1)
+    trade_amount = safe_float(data.get('trade_amount'), 9.0)
+    trading_mode = data.get('trading_mode', 'LIVE')
     reset_now = bool(data.get('reset_now', False))
     
     bybit_api_key = data.get('bybit_api_key', '')

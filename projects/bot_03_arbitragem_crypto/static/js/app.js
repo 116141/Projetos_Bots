@@ -153,13 +153,21 @@ async function toggleBotState() {
     fetchStatus();
 }
 
+function parseLocaleFloat(val) {
+    if (typeof val === 'number') return val;
+    if (!val) return 0;
+    const cleanStr = String(val).replace(',', '.');
+    const num = parseFloat(cleanStr);
+    return isNaN(num) ? 0 : num;
+}
+
 async function saveConfig(e) {
     e.preventDefault();
     const config = {
         trading_mode: document.getElementById('selectTradingMode').value,
         symbol: document.getElementById('selectSymbol').value,
-        min_spread: parseFloat(document.getElementById('inputMinSpread').value),
-        trade_amount: parseFloat(document.getElementById('inputTradeAmount').value)
+        min_spread: parseLocaleFloat(document.getElementById('inputMinSpread').value),
+        trade_amount: parseLocaleFloat(document.getElementById('inputTradeAmount').value)
     };
 
     await fetch('/api/config', {
