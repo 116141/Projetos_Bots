@@ -16,15 +16,16 @@ class ArbitrageBotEngine:
         self.trading_mode = "LIVE"  # Default to LIVE mode
         
         # API Keys para Corretoras (Binance / Bybit / KuCoin)
-        self.binance_api_key = os.environ.get('BINANCE_API_KEY', '')
-        self.binance_secret_key = os.environ.get('BINANCE_SECRET_KEY', '')
-        self.bybit_api_key = os.environ.get('BYBIT_API_KEY', '')
-        self.bybit_secret_key = os.environ.get('BYBIT_SECRET_KEY', '')
+        self.binance_api_key = os.environ.get('BINANCE_API_KEY', '') or os.environ.get('BINANCE_KEY', '')
+        self.binance_secret_key = os.environ.get('BINANCE_SECRET_KEY', '') or os.environ.get('BINANCE_SECRET', '')
+        self.bybit_api_key = os.environ.get('BYBIT_API_KEY', '') or os.environ.get('BYBIT_KEY', '') or os.environ.get('BYBIT_APIKEY', '')
+        self.bybit_secret_key = os.environ.get('BYBIT_SECRET_KEY', '') or os.environ.get('BYBIT_SECRET', '') or os.environ.get('BYBIT_SECRETKEY', '')
         
         # Stats
         self.initial_balance = 10000.0
         self.total_profit = 0.0
         self.opportunities_found = 0
+        self.last_execution_status = "Varredura ativa. A aguardar discrepância de preço..."
         
         # Dual Exchange Real Balances
         self.binance_balance = 0.0
@@ -109,6 +110,7 @@ class ArbitrageBotEngine:
     def execute_real_bybit_order(self, symbol, side, qty_usd, current_price=65000.0):
         """Executa uma ordem REAL no mercado Spot da Bybit via API V5"""
         if not (self.bybit_api_key and self.bybit_secret_key):
+            self.last_execution_status = "⚠️ Chaves API da Bybit ausentes nas variáveis do Render"
             return False, "Chaves API da Bybit ausentes"
 
         try:
@@ -152,12 +154,45 @@ class ArbitrageBotEngine:
             if res.status_code == 200:
                 resp_json = res.json()
                 if resp_json.get("retCode") == 0:
+                    self.last_execution_status = f"✅ Ordem {side} de ${qty_usd} executada com sucesso na Bybit!"
                     return True, resp_json.get("result", {})
                 else:
-                    return False, resp_json.get("retMsg", "Erro Bybit")
+                    ret_msg = resp_json.get("retMsg", "Erro Bybit")
+                    self.last_execution_status = f"⚠️ Bybit recusa: {ret_msg}"
+                    return False, ret_msg
+            self.last_execution_status = f"⚠️ Bybit Erro HTTP {res.status_code}"
             return False, f"HTTP {res.status_code}"
         except Exception as e:
+            self.last_execution_status = f"⚠️ Exceção Bybit: {str(e)}"
             return False, str(e)
+
+    def get_status(self):
+        self.ensure_thread_running()
+        self.fetch_real_exchange_balances()
+        with self._lock:
+            has_api_keys = bool(self.binance_api_key or self.bybit_api_key)
+            if self.trading_mode == "LIVE":
+                total_equity = self.binance_balance + self.bybit_balance
+            else:
+                total_equity = self.initial_balance + self.total_profit
+
+            return {
+                "is_running": self.is_running,
+                "symbol": self.symbol,
+                "min_spread_pct": self.min_spread_pct,
+                "trade_amount": self.trade_amount,
+                "trading_mode": self.trading_mode,
+                "has_api_keys": has_api_keys,
+                "binance_balance": round(self.binance_balance, 2),
+                "bybit_balance": round(self.bybit_balance, 2),
+                "initial_balance": self.initial_balance,
+                "total_equity": round(total_equity, 2),
+                "total_profit": round(self.total_profit, 2),
+                "opportunities_found": self.opportunities_found,
+                "last_execution_status": self.last_execution_status,
+                "latest_prices": self.latest_prices,
+                "executed_trades": self.executed_trades[:50]
+            }
 
     def scan_arbitrage_opportunities(self):
         prices = self.fetch_live_exchange_prices()

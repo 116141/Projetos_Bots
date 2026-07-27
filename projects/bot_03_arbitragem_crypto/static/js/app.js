@@ -40,6 +40,13 @@ async function fetchStatus() {
             toggleBtn.innerText = '▶ Iniciar Arbitragem 24/7';
         }
 
+        if (data.last_execution_status) {
+            const spanExec = document.getElementById('spanExecutionStatus');
+            if (spanExec) {
+                spanExec.innerText = data.last_execution_status;
+            }
+        }
+
         const isLiveMode = (data.trading_mode === 'LIVE');
         document.getElementById('equityTitle').innerText = isLiveMode ? 'Saldo Total Consolidado (CONTA REAL)' : 'Saldo Total (Banca Simulação)';
         document.getElementById('metricEquity').innerText = `$${data.total_equity.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
