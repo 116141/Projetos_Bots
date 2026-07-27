@@ -147,44 +147,84 @@ class ArbitrageBotEngine:
             if live_balance <= 0:
                 return None
 
-            # Encontra a menor e maior cotação entre todas as 5 corretoras
+            has_binance_funds = (self.binance_balance > 0)
+            has_bybit_funds = (self.bybit_balance > 0)
+
+            # CASO 1: Saldo em AMBAS as corretoras (Arbitragem Dual Perfeita Binance <-> Bybit)
+            if has_binance_funds and has_bybit_funds:
+                dual_prices = {k: v for k, v in prices.items() if k in ["Binance", "Bybit"]}
+                if len(dual_prices) == 2:
+                    buy_ex = min(dual_prices, key=dual_prices.get)
+                    sell_ex = max(dual_prices, key=dual_prices.get)
+                    buy_price = dual_prices[buy_ex]
+                    sell_price = dual_prices[sell_ex]
+
+                    raw_spread_pct = ((sell_price - buy_price) / buy_price) * 100
+                    net_spread_pct = raw_spread_pct - 0.2
+
+                    if net_spread_pct >= self.min_spread_pct:
+                        side_bybit = "Buy" if buy_ex == "Bybit" else "Sell"
+                        success, _ = self.execute_real_bybit_order(self.symbol, side_bybit, self.trade_amount)
+
+                        if success:
+                            with self._lock:
+                                self.opportunities_found += 1
+                                net_profit_dollar = (self.trade_amount * (net_spread_pct / 100))
+                                self.total_profit += net_profit_dollar
+
+                                trade_record = {
+                                    "id": len(self.executed_trades) + 1,
+                                    "date": datetime.now().strftime("%Y-%m-%d"),
+                                    "timestamp": datetime.now().strftime("%H:%M:%S"),
+                                    "symbol": self.symbol,
+                                    "buy_exchange": buy_ex,
+                                    "buy_price": buy_price,
+                                    "sell_exchange": sell_ex,
+                                    "sell_price": sell_price,
+                                    "gross_spread_pct": round(raw_spread_pct, 2),
+                                    "net_spread_pct": round(net_spread_pct, 2),
+                                    "net_profit": round(net_profit_dollar, 2),
+                                    "status": "REAL DUAL EXECUTADO"
+                                }
+                                self.executed_trades.insert(0, trade_record)
+                                return trade_record
+                return None
+
+            # CASO 2: Saldo em apenas UMA corretora (Ex: Bybit) -> Compara contra todas as 5 corretoras!
             buy_ex = min(prices, key=prices.get)
             sell_ex = max(prices, key=prices.get)
             buy_price = prices[buy_ex]
             sell_price = prices[sell_ex]
 
-            raw_spread = sell_price - buy_price
-            raw_spread_pct = (raw_spread / buy_price) * 100
+            raw_spread_pct = ((sell_price - buy_price) / buy_price) * 100
             net_spread_pct = raw_spread_pct - 0.2
 
-            # Se a Bybit for uma das pontas e o spread for lucrativo -> Dispara ordem REAL na Bybit!
-            if net_spread_pct >= self.min_spread_pct and ("Bybit" in [buy_ex, sell_ex]):
-                side = "Buy" if buy_ex == "Bybit" else "Sell"
-                success, details = self.execute_real_bybit_order(self.symbol, side, self.trade_amount)
-                
-                # APENAS SE A ORDEM REAL FOR CONFIRMADA PELA BYBIT É QUE REGISTA NO PAINEL!
-                if success:
-                    with self._lock:
-                        self.opportunities_found += 1
-                        net_profit_dollar = (self.trade_amount * (net_spread_pct / 100))
-                        self.total_profit += net_profit_dollar
+            if net_spread_pct >= self.min_spread_pct:
+                if has_bybit_funds and ("Bybit" in [buy_ex, sell_ex]):
+                    side = "Buy" if buy_ex == "Bybit" else "Sell"
+                    success, _ = self.execute_real_bybit_order(self.symbol, side, self.trade_amount)
+                    if success:
+                        with self._lock:
+                            self.opportunities_found += 1
+                            net_profit_dollar = (self.trade_amount * (net_spread_pct / 100))
+                            self.total_profit += net_profit_dollar
 
-                        trade_record = {
-                            "id": len(self.executed_trades) + 1,
-                            "date": datetime.now().strftime("%Y-%m-%d"),
-                            "timestamp": datetime.now().strftime("%H:%M:%S"),
-                            "symbol": self.symbol,
-                            "buy_exchange": buy_ex,
-                            "buy_price": buy_price,
-                            "sell_exchange": sell_ex,
-                            "sell_price": sell_price,
-                            "gross_spread_pct": round(raw_spread_pct, 2),
-                            "net_spread_pct": round(net_spread_pct, 2),
-                            "net_profit": round(net_profit_dollar, 2),
-                            "status": "REAL EXECUTADO"
-                        }
-                        self.executed_trades.insert(0, trade_record)
-                        return trade_record
+                            trade_record = {
+                                "id": len(self.executed_trades) + 1,
+                                "date": datetime.now().strftime("%Y-%m-%d"),
+                                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                                "symbol": self.symbol,
+                                "buy_exchange": buy_ex,
+                                "buy_price": buy_price,
+                                "sell_exchange": sell_ex,
+                                "sell_price": sell_price,
+                                "gross_spread_pct": round(raw_spread_pct, 2),
+                                "net_spread_pct": round(net_spread_pct, 2),
+                                "net_profit": round(net_profit_dollar, 2),
+                                "status": "REAL EXECUTADO"
+                            }
+                            self.executed_trades.insert(0, trade_record)
+                            return trade_record
             return None
 
         # Modo SIMULAÇÃO (Paper Trading)
