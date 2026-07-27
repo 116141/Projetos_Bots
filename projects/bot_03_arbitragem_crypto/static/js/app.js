@@ -150,9 +150,7 @@ async function saveConfig(e) {
         trading_mode: document.getElementById('selectTradingMode').value,
         symbol: document.getElementById('selectSymbol').value,
         min_spread: parseFloat(document.getElementById('inputMinSpread').value),
-        trade_amount: parseFloat(document.getElementById('inputTradeAmount').value),
-        bybit_api_key: document.getElementById('inputBybitApiKey')?.value || '',
-        bybit_secret_key: document.getElementById('inputBybitSecretKey')?.value || ''
+        trade_amount: parseFloat(document.getElementById('inputTradeAmount').value)
     };
 
     await fetch('/api/config', {
