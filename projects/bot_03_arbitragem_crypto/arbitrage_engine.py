@@ -30,6 +30,8 @@ class ArbitrageBotEngine:
         # Dual Exchange Real Balances
         self.binance_balance = 0.0
         self.bybit_balance = 9.43
+        self.bybit_usdt_balance = 0.0   # Saldo livre em USDT na Bybit
+        self.bybit_btc_balance = 0.0    # Saldo em BTC na Bybit
         self.executed_trades = []
         
         # Exchange Price State
@@ -77,11 +79,6 @@ class ArbitrageBotEngine:
                 json.dump(cfg, f, indent=2)
         except Exception:
             pass
-        self.order_book_matrix = []
-        
-        self._lock = threading.Lock()
-        self._thread = threading.Thread(target=self._run_loop, daemon=True)
-        self._thread.start()
 
     def fetch_live_exchange_prices(self):
         symbol_fmt = self.symbol.replace("/", "")       # e.g. BTCUSDT
@@ -329,64 +326,84 @@ class ArbitrageBotEngine:
                 # Sub-caso A: Bybit está MAIS BARATA do que a outra corretora -> COMPRA na Bybit!
                 if bybit_price < other_price:
                     raw_spread_pct = ((other_price - bybit_price) / bybit_price) * 100
-                    net_spread_pct = raw_spread_pct - 0.2  # Taxas totais estimadas de 0.2%
+                    net_spread_pct = raw_spread_pct - 0.1  # Taxa Bybit Spot: 0.1%
+
+                    # Calcular montante real disponivel em USDT
+                    available_usdt = self.bybit_usdt_balance if self.bybit_usdt_balance > 0 else self.trade_amount
+                    actual_amount = min(self.trade_amount, available_usdt)
+                    bybit_min_order = 5.0
 
                     if net_spread_pct >= self.min_spread_pct:
-                        success, details = self.execute_real_bybit_order(self.symbol, "Buy", self.trade_amount, current_price=bybit_price)
-                        if success:
-                            with self._lock:
-                                self.opportunities_found += 1
-                                net_profit_dollar = (self.trade_amount * (net_spread_pct / 100))
-                                self.total_profit += net_profit_dollar
+                        if actual_amount < bybit_min_order:
+                            self.last_execution_status = f"⚠️ Spread OK ({net_spread_pct:.3f}%) mas USDT insuficiente (${available_usdt:.2f}). Min: $5"
+                        else:
+                            success, details = self.execute_real_bybit_order(self.symbol, "Buy", actual_amount, current_price=bybit_price)
+                            if success:
+                                with self._lock:
+                                    self.opportunities_found += 1
+                                    net_profit_dollar = (actual_amount * (net_spread_pct / 100))
+                                    self.total_profit += net_profit_dollar
 
-                                trade_record = {
-                                    "id": len(self.executed_trades) + 1,
-                                    "date": datetime.now().strftime("%Y-%m-%d"),
-                                    "timestamp": datetime.now().strftime("%H:%M:%S"),
-                                    "symbol": self.symbol,
-                                    "buy_exchange": "Bybit",
-                                    "buy_price": round(bybit_price, 2),
-                                    "sell_exchange": other_ex,
-                                    "sell_price": round(other_price, 2),
-                                    "gross_spread_pct": round(raw_spread_pct, 2),
-                                    "net_spread_pct": round(net_spread_pct, 2),
-                                    "net_profit": round(net_profit_dollar, 2),
-                                    "status": "REAL EXECUTADO"
-                                }
-                                self.executed_trades.insert(0, trade_record)
-                                self._save_config()
-                                return trade_record
+                                    trade_record = {
+                                        "id": len(self.executed_trades) + 1,
+                                        "date": datetime.now().strftime("%Y-%m-%d"),
+                                        "timestamp": datetime.now().strftime("%H:%M:%S"),
+                                        "symbol": self.symbol,
+                                        "buy_exchange": "Bybit",
+                                        "buy_price": round(bybit_price, 2),
+                                        "sell_exchange": other_ex,
+                                        "sell_price": round(other_price, 2),
+                                        "gross_spread_pct": round(raw_spread_pct, 2),
+                                        "net_spread_pct": round(net_spread_pct, 2),
+                                        "net_profit": round(net_profit_dollar, 2),
+                                        "status": "REAL EXECUTADO"
+                                    }
+                                    self.executed_trades.insert(0, trade_record)
+                                    self._save_config()
+                                    return trade_record
+                    else:
+                        self.last_execution_status = f"🔍 Bybit<{other_ex}: spread bruto={raw_spread_pct:.3f}% | liquido={net_spread_pct:.3f}% < {self.min_spread_pct}%"
 
                 # Sub-caso B: Bybit está MAIS CARA do que a outra corretora -> VENDA na Bybit!
                 elif bybit_price > other_price:
                     raw_spread_pct = ((bybit_price - other_price) / other_price) * 100
-                    net_spread_pct = raw_spread_pct - 0.2  # Taxas totais estimadas de 0.2%
+                    net_spread_pct = raw_spread_pct - 0.1  # Taxa Bybit Spot: 0.1%
+
+                    # Para VENDA: usa o BTC disponivel na conta
+                    available_btc = self.bybit_btc_balance
+                    btc_needed = self.trade_amount / other_price
 
                     if net_spread_pct >= self.min_spread_pct:
-                        success, details = self.execute_real_bybit_order(self.symbol, "Sell", self.trade_amount, current_price=other_price)
-                        if success:
-                            with self._lock:
-                                self.opportunities_found += 1
-                                net_profit_dollar = (self.trade_amount * (net_spread_pct / 100))
-                                self.total_profit += net_profit_dollar
+                        if available_btc < btc_needed * 0.5:
+                            self.last_execution_status = f"⚠️ Spread OK ({net_spread_pct:.3f}%) mas BTC insuficiente ({available_btc:.8f} BTC)"
+                        else:
+                            sell_amount = min(self.trade_amount, available_btc * other_price)
+                            success, details = self.execute_real_bybit_order(self.symbol, "Sell", sell_amount, current_price=other_price)
+                            if success:
+                                with self._lock:
+                                    self.opportunities_found += 1
+                                    net_profit_dollar = (sell_amount * (net_spread_pct / 100))
+                                    self.total_profit += net_profit_dollar
 
-                                trade_record = {
-                                    "id": len(self.executed_trades) + 1,
-                                    "date": datetime.now().strftime("%Y-%m-%d"),
-                                    "timestamp": datetime.now().strftime("%H:%M:%S"),
-                                    "symbol": self.symbol,
-                                    "buy_exchange": other_ex,
-                                    "buy_price": round(other_price, 2),
-                                    "sell_exchange": "Bybit",
-                                    "sell_price": round(bybit_price, 2),
-                                    "gross_spread_pct": round(raw_spread_pct, 2),
-                                    "net_spread_pct": round(net_spread_pct, 2),
-                                    "net_profit": round(net_profit_dollar, 2),
-                                    "status": "REAL EXECUTADO"
-                                }
-                                self.executed_trades.insert(0, trade_record)
-                                self._save_config()
-                                return trade_record
+                                    trade_record = {
+                                        "id": len(self.executed_trades) + 1,
+                                        "date": datetime.now().strftime("%Y-%m-%d"),
+                                        "timestamp": datetime.now().strftime("%H:%M:%S"),
+                                        "symbol": self.symbol,
+                                        "buy_exchange": other_ex,
+                                        "buy_price": round(other_price, 2),
+                                        "sell_exchange": "Bybit",
+                                        "sell_price": round(bybit_price, 2),
+                                        "gross_spread_pct": round(raw_spread_pct, 2),
+                                        "net_spread_pct": round(net_spread_pct, 2),
+                                        "net_profit": round(net_profit_dollar, 2),
+                                        "status": "REAL EXECUTADO"
+                                    }
+                                    self.executed_trades.insert(0, trade_record)
+                                    self._save_config()
+                                    return trade_record
+                    else:
+                        self.last_execution_status = f"🔍 Bybit>{other_ex}: spread bruto={raw_spread_pct:.3f}% | liquido={net_spread_pct:.3f}% < {self.min_spread_pct}%"
             return None
 
         # Modo SIMULAÇÃO (Paper Trading)
@@ -481,6 +498,14 @@ class ArbitrageBotEngine:
                             self.bybit_balance = tot_eq
                         else:
                             self.bybit_balance = 9.43
+                        # Rastrear saldo por moeda
+                        for coin_data in list_data[0].get("coin", []):
+                            coin = coin_data.get("coin", "")
+                            bal = float(coin_data.get("walletBalance", 0.0))
+                            if coin == "USDT":
+                                self.bybit_usdt_balance = bal
+                            elif coin == "BTC":
+                                self.bybit_btc_balance = bal
                 else:
                     self.bybit_balance = 9.43
             except Exception:
@@ -518,6 +543,7 @@ class ArbitrageBotEngine:
                 "total_equity": round(total_equity, 2),
                 "total_profit": round(self.total_profit, 2),
                 "opportunities_found": self.opportunities_found,
+                "last_execution_status": self.last_execution_status,
                 "latest_prices": self.latest_prices,
                 "executed_trades": self.executed_trades[:50]
             }
