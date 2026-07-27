@@ -40,7 +40,10 @@ def update_config():
     trading_mode = data.get('trading_mode', 'SIMULATION')
     reset_now = bool(data.get('reset_now', False))
     
-    bot.update_config(symbol, min_spread, trade_amount, trading_mode, reset_now=reset_now)
+    bybit_api_key = data.get('bybit_api_key', '')
+    bybit_secret_key = data.get('bybit_secret_key', '')
+    
+    bot.update_config(symbol, min_spread, trade_amount, trading_mode, reset_now=reset_now, bybit_api_key=bybit_api_key, bybit_secret_key=bybit_secret_key)
     return jsonify({"status": "updated", "config": data})
 
 @app.route('/api/reset', methods=['POST'])

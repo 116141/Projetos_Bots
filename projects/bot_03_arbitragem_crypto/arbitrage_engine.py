@@ -50,6 +50,10 @@ class ArbitrageBotEngine:
                     self.symbol = cfg.get('symbol', 'BTC/USDT')
                     self.min_spread_pct = float(cfg.get('min_spread_pct', 0.2))
                     self.trade_amount = float(cfg.get('trade_amount', 5.0))
+                    if cfg.get('bybit_api_key'):
+                        self.bybit_api_key = cfg.get('bybit_api_key')
+                    if cfg.get('bybit_secret_key'):
+                        self.bybit_secret_key = cfg.get('bybit_secret_key')
             except Exception:
                 pass
 
@@ -59,7 +63,9 @@ class ArbitrageBotEngine:
                 'trading_mode': self.trading_mode,
                 'symbol': self.symbol,
                 'min_spread_pct': self.min_spread_pct,
-                'trade_amount': self.trade_amount
+                'trade_amount': self.trade_amount,
+                'bybit_api_key': self.bybit_api_key,
+                'bybit_secret_key': self.bybit_secret_key
             }
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(cfg, f, indent=2)
@@ -360,7 +366,7 @@ class ArbitrageBotEngine:
             self.opportunities_found = 0
             self.executed_trades = []
 
-    def update_config(self, symbol, min_spread, trade_amount, trading_mode="LIVE", reset_now=False):
+    def update_config(self, symbol, min_spread, trade_amount, trading_mode="LIVE", reset_now=False, bybit_api_key=None, bybit_secret_key=None):
         with self._lock:
             new_mode = str(trading_mode).upper()
             mode_changed = (self.trading_mode != new_mode)
@@ -375,6 +381,10 @@ class ArbitrageBotEngine:
             self.symbol = symbol
             self.min_spread_pct = float(min_spread)
             self.trade_amount = float(trade_amount)
+            if bybit_api_key:
+                self.bybit_api_key = str(bybit_api_key).strip()
+            if bybit_secret_key:
+                self.bybit_secret_key = str(bybit_secret_key).strip()
             self._save_config()
 
     def fetch_real_exchange_balances(self):
