@@ -38,9 +38,15 @@ def update_config():
     min_spread = float(data.get('min_spread', 0.4))
     trade_amount = float(data.get('trade_amount', 1000.0))
     trading_mode = data.get('trading_mode', 'SIMULATION')
+    reset_now = bool(data.get('reset_now', False))
     
-    bot.update_config(symbol, min_spread, trade_amount, trading_mode)
+    bot.update_config(symbol, min_spread, trade_amount, trading_mode, reset_now=reset_now)
     return jsonify({"status": "updated", "config": data})
+
+@app.route('/api/reset', methods=['POST'])
+def reset_stats():
+    bot.reset_stats()
+    return jsonify({"status": "reset", "is_running": bot.is_running})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5002))

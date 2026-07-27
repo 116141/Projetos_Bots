@@ -141,18 +141,23 @@ class ArbitrageBotEngine:
                 return trade_record
         return None
 
-    def update_config(self, symbol, min_spread, trade_amount, trading_mode="SIMULATION"):
+    def reset_stats(self):
+        with self._lock:
+            self.total_profit = 0.0
+            self.opportunities_found = 0
+            self.executed_trades = []
+
+    def update_config(self, symbol, min_spread, trade_amount, trading_mode="SIMULATION", reset_now=False):
         with self._lock:
             new_mode = str(trading_mode).upper()
+            mode_changed = (self.trading_mode != new_mode)
             self.trading_mode = new_mode
 
-            # Se está em CONTA REAL e o saldo real é $0.00 -> Mantém o painel a $0.00 sem dados fakes!
-            if new_mode == "LIVE":
-                live_balance = self.binance_balance + self.bybit_balance
-                if live_balance <= 0:
-                    self.total_profit = 0.0
-                    self.opportunities_found = 0
-                    self.executed_trades = []
+            # Se mudou para CONTA REAL ou se pediu reset -> Limpa todo o histórico anterior!
+            if new_mode == "LIVE" and (mode_changed or reset_now or self.total_profit > 100):
+                self.total_profit = 0.0
+                self.opportunities_found = 0
+                self.executed_trades = []
 
             self.symbol = symbol
             self.min_spread_pct = float(min_spread)

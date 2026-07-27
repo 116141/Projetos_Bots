@@ -8,6 +8,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnToggleBot').addEventListener('click', toggleBotState);
     document.getElementById('configForm').addEventListener('submit', saveConfig);
     document.getElementById('selectPeriodFilter').addEventListener('change', filterAndRenderTrades);
+    
+    document.getElementById('btnResetDashboard').addEventListener('click', async () => {
+        if (confirm('Deseja limpar todo o histórico anterior e reiniciar a contagem de lucros a $0.00 para a Conta Real?')) {
+            await fetch('/api/reset', { method: 'POST' });
+            alert('Painel limpo com sucesso! A contagem de lucros recomeçará do zero.');
+            fetchStatus();
+        }
+    });
 });
 
 async function fetchStatus() {
