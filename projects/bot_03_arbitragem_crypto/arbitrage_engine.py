@@ -90,20 +90,108 @@ class ArbitrageBotEngine:
             self.scan_arbitrage_opportunities()
             time.sleep(2)
 
+    def execute_real_bybit_order(self, symbol, side, qty_usd):
+        """Executa uma ordem REAL no mercado Spot da Bybit via API V5"""
+        if not (self.bybit_api_key and self.bybit_secret_key):
+            return False, "Chaves API da Bybit ausentes"
+
+        try:
+            import hmac
+            import hashlib
+            import json
+
+            symbol_fmt = symbol.replace("/", "")
+            timestamp = str(int(time.time() * 1000))
+            recv_window = "5000"
+            
+            body_dict = {
+                "category": "spot",
+                "symbol": symbol_fmt,
+                "side": side,
+                "orderType": "Market",
+                "qty": str(round(qty_usd, 2))
+            }
+            body_json = json.dumps(body_dict)
+            
+            param_str = timestamp + self.bybit_api_key + recv_window + body_json
+            signature = hmac.new(self.bybit_secret_key.encode('utf-8'), param_str.encode('utf-8'), hashlib.sha256).hexdigest()
+
+            headers = {
+                "Content-Type": "application/json",
+                "X-BAPI-API-KEY": self.bybit_api_key,
+                "X-BAPI-SIGN": signature,
+                "X-BAPI-TIMESTAMP": timestamp,
+                "X-BAPI-RECV-WINDOW": recv_window
+            }
+
+            res = requests.post("https://api.bybit.com/v5/order/create", data=body_json, headers=headers, timeout=5)
+            if res.status_code == 200:
+                resp_json = res.json()
+                if resp_json.get("retCode") == 0:
+                    return True, resp_json.get("result", {})
+                else:
+                    return False, resp_json.get("retMsg", "Erro Bybit")
+            return False, f"HTTP {res.status_code}"
+        except Exception as e:
+            return False, str(e)
+
     def scan_arbitrage_opportunities(self):
         prices = self.fetch_live_exchange_prices()
         
         if not prices:
             return None
 
-        # No modo CONTA REAL (LIVE), se o saldo for $0.00, NÃO executa nem regista arbitragens simuladas!
-        with self._lock:
-            if self.trading_mode == "LIVE":
-                live_balance = self.binance_balance + self.bybit_balance
-                if live_balance <= 0:
-                    return None
+        # No modo CONTA REAL (LIVE):
+        if self.trading_mode == "LIVE":
+            # Filtra apenas as corretoras ativas com API (Binance e Bybit)
+            prices = {k: v for k, v in prices.items() if k in ["Binance", "Bybit"]}
+            if len(prices) < 2:
+                return None
 
-        # Find Lowest Buy Price & Highest Sell Price
+            live_balance = self.binance_balance + self.bybit_balance
+            if live_balance <= 0:
+                return None
+
+            buy_ex = min(prices, key=prices.get)
+            sell_ex = max(prices, key=prices.get)
+            buy_price = prices[buy_ex]
+            sell_price = prices[sell_ex]
+
+            raw_spread = sell_price - buy_price
+            raw_spread_pct = (raw_spread / buy_price) * 100
+            net_spread_pct = raw_spread_pct - 0.2
+
+            if net_spread_pct >= self.min_spread_pct:
+                # Tenta executar a ordem REAL na Bybit se Bybit for uma das pontas
+                side = "Buy" if buy_ex == "Bybit" else "Sell"
+                success, details = self.execute_real_bybit_order(self.symbol, side, self.trade_amount)
+                
+                # APENAS SE A ORDEM REAL FOR CONFIRMADA PELA BYBIT É QUE CONTABILIZA O LUCRO!
+                if success:
+                    with self._lock:
+                        self.opportunities_found += 1
+                        net_profit_dollar = (self.trade_amount * (net_spread_pct / 100))
+                        self.total_profit += net_profit_dollar
+
+                        trade_record = {
+                            "id": len(self.executed_trades) + 1,
+                            "date": datetime.now().strftime("%Y-%m-%d"),
+                            "timestamp": datetime.now().strftime("%H:%M:%S"),
+                            "symbol": self.symbol,
+                            "buy_exchange": buy_ex,
+                            "buy_price": buy_price,
+                            "sell_exchange": sell_ex,
+                            "sell_price": sell_price,
+                            "gross_spread_pct": round(raw_spread_pct, 2),
+                            "net_spread_pct": round(net_spread_pct, 2),
+                            "net_profit": round(net_profit_dollar, 2),
+                            "status": "REAL EXECUTADO"
+                        }
+                        self.executed_trades.insert(0, trade_record)
+                        return trade_record
+            return None
+
+        # Modo SIMULAÇÃO (Paper Trading)
         buy_ex = min(prices, key=prices.get)
         sell_ex = max(prices, key=prices.get)
         
@@ -112,10 +200,7 @@ class ArbitrageBotEngine:
 
         raw_spread = sell_price - buy_price
         raw_spread_pct = (raw_spread / buy_price) * 100
-        
-        # Deduct estimated fees (0.1% buy fee + 0.1% sell fee = 0.2%)
-        fee_pct = 0.2
-        net_spread_pct = raw_spread_pct - fee_pct
+        net_spread_pct = raw_spread_pct - 0.2
 
         with self._lock:
             if net_spread_pct >= self.min_spread_pct:
@@ -135,7 +220,7 @@ class ArbitrageBotEngine:
                     "gross_spread_pct": round(raw_spread_pct, 2),
                     "net_spread_pct": round(net_spread_pct, 2),
                     "net_profit": round(net_profit_dollar, 2),
-                    "status": "EXECUTADO"
+                    "status": "SIMULADO"
                 }
                 self.executed_trades.insert(0, trade_record)
                 return trade_record
