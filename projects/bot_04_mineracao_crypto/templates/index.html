@@ -25,8 +25,8 @@
   <div class="dashboard-grid">
     <div class="card metric-card">
       <span class="metric-title">Moeda Ativa em Mineração</span>
-      <span class="metric-value text-green" id="metricActiveCoin">KAS</span>
-      <span class="metric-sub text-muted" id="metricActiveAlgo">KHeavyHash</span>
+      <span class="metric-value text-green" id="metricActiveCoin">---</span>
+      <span class="metric-sub text-muted" id="metricActiveAlgo">A calcular...</span>
     </div>
 
     <div class="card metric-card">
@@ -40,9 +40,21 @@
     </div>
 
     <div class="card metric-card">
+      <span class="metric-title">Lucro Líquido Acumulado (Sessão)</span>
+      <span class="metric-value text-green" id="metricNetProfit">$0.000000</span>
+      <span class="metric-sub text-muted" id="metricMinedTotal">Total minerado: $0.00</span>
+    </div>
+
+    <div class="card metric-card">
       <span class="metric-title">Consumo / Custo Energia</span>
       <span class="metric-value text-orange" id="metricPower">600W</span>
       <span class="metric-sub text-muted" id="metricElecCost">$0.12 / kWh</span>
+    </div>
+
+    <div class="card metric-card" id="nicehashStatusCard">
+      <span class="metric-title">Estado da Conta NiceHash</span>
+      <span class="metric-value" id="metricNicehashRigs" style="font-size:1.1rem;">A verificar...</span>
+      <span class="metric-sub" id="metricNicehashStatus" style="color: var(--text-muted);"></span>
     </div>
   </div>
 
@@ -59,6 +71,7 @@
               <th>Receita Bruta (24h)</th>
               <th>Custo Energia (24h)</th>
               <th>Lucro Líquido (24h)</th>
+              <th>Fonte</th>
               <th>Estado</th>
             </tr>
           </thead>

@@ -1,0 +1,10 @@
+{
+  "active_coin": "XMR",
+  "auto_switch_enabled": true,
+  "rig_hashrate_mhs": 250.0,
+  "power_consumption_watts": 600.0,
+  "electricity_cost_kwh": 0.12,
+  "total_mined_usd": 13.697391,
+  "total_electricity_usd": 0.0002,
+  "net_profit_usd": 13.697191
+}
