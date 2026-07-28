@@ -35,7 +35,8 @@ BOT_SERVICES = {
     "bot_02": {"name": "DealHunter AI", "icon": "📢", "port": 5001, "url": os.environ.get('BOT_02_URL', 'http://localhost:5001')},
     "bot_03": {"name": "ArbitragePro AI", "icon": "🔄", "port": 5002, "url": os.environ.get('BOT_03_URL', 'http://localhost:5002')},
     "bot_04": {"name": "AutoMine Profitability AI", "icon": "⚡", "port": 5003, "url": os.environ.get('BOT_04_URL', 'http://localhost:5003')},
-    "bot_05": {"name": "Crypto Sentinel AI", "icon": "🧠", "port": 5004, "url": os.environ.get('BOT_05_URL', 'http://localhost:5004')}
+    "bot_05": {"name": "Crypto Sentinel AI", "icon": "🧠", "port": 5004, "url": os.environ.get('BOT_05_URL', 'http://localhost:5004')},
+    "bot_07": {"name": "Airdrop Farmer", "icon": "🪂", "port": 5006, "url": os.environ.get('BOT_07_URL', 'http://localhost:5006')}
 }
 
 @app.route('/')
