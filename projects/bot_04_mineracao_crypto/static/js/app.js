@@ -1,13 +1,5 @@
 // YieldPro AI App.js
 
-function updateTime() {
-    const now = new Date();
-    document.getElementById('currentTime').textContent = now.toLocaleTimeString();
-}
-
-setInterval(updateTime, 1000);
-updateTime();
-
 // Elementos
 const toggleBtn = document.getElementById('btnToggleBot');
 const saveBtn = document.getElementById('btnSaveConfig');
