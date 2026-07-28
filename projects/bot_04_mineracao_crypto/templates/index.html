@@ -1,144 +1,138 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AutoMine Profitability AI - Bot de Mineração Inteligente</title>
-  <link rel="stylesheet" href="/static/css/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YieldPro AI - Monitor de Rendimento</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1><i class="fa-solid fa-seedling" style="color: var(--accent-green); margin-right: 10px;"></i>Bot 04: YieldPro AI</h1>
+            </div>
+            <div class="header-right">
+                <span id="currentTime">--:--:--</span>
+                <div class="user-profile">
+                    <i class="fa-solid fa-user"></i> Edmilson Gil (Administrador)
+                    <span class="badge online">ONLINE</span>
+                </div>
+            </div>
+        </header>
 
-  <header>
-    <div class="brand">
-      <div class="brand-icon">⚡</div>
-      <div>
-        <h1>AutoMine Profitability AI</h1>
-        <p>Alternância Automática & Maximização de Lucro de Mineração</p>
-      </div>
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Top Cards -->
+            <div class="top-cards-row">
+                <div class="summary-card">
+                    <div class="card-title">SALDO TOTAL ALOCADO (SIMULADO)</div>
+                    <div class="card-value" style="color: var(--accent-cyan);">$<span id="valUserBalance">0.00</span></div>
+                    <div class="card-subtitle"><i class="fa-solid fa-coins"></i> <span id="valActiveCoin">USDT</span> Ativo</div>
+                </div>
+                <div class="summary-card">
+                    <div class="card-title">YIELD PASSIVO DIÁRIO (MAX)</div>
+                    <div class="card-value" style="color: var(--accent-green);">+$<span id="valDailyUsd">0.00</span></div>
+                    <div class="card-subtitle"><i class="fa-solid fa-calendar-day"></i> Estimativa</div>
+                </div>
+                <div class="summary-card">
+                    <div class="card-title">YIELD ACUMULADO (SESSÃO)</div>
+                    <div class="card-value" style="color: var(--accent-gold);">+$<span id="valTotalYield">0.00000000</span></div>
+                    <div class="card-subtitle"><i class="fa-solid fa-piggy-bank"></i> Rendimento Real Simulando Melhor APY</div>
+                </div>
+            </div>
+
+            <div class="content-grid" style="grid-template-columns: 1fr 1fr;">
+                <!-- Panel: Configurações -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2><i class="fa-solid fa-sliders"></i> Configurar Carteira (YieldPro)</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label>Criptomoeda</label>
+                            <select id="selectCoin" class="form-control">
+                                <option value="USDT">USDT (Tether Dólar)</option>
+                                <option value="BTC">BTC (Bitcoin)</option>
+                                <option value="ETH">ETH (Ethereum)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Saldo Disponível (Em USD)</label>
+                            <input type="number" id="inputBalance" class="form-control" value="8.75" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Alerta APY Mínimo (%)</label>
+                            <input type="number" id="inputMinApy" class="form-control" value="10.0" step="0.1">
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button id="btnToggleBot" class="btn btn-danger" style="flex: 1;">
+                                <i class="fa-solid fa-stop"></i> Parar Motor
+                            </button>
+                            <button id="btnSaveConfig" class="btn btn-secondary" style="flex: 1;">
+                                <i class="fa-solid fa-floppy-disk"></i> Salvar & Simular
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel: Melhor Oportunidade -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2><i class="fa-solid fa-trophy"></i> Melhor Oportunidade Atual</h2>
+                        <span id="botStatusBadge" class="badge online" style="float:right;">BUSCANDO...</span>
+                    </div>
+                    <div class="panel-body" style="text-align: center; padding-top: 30px;">
+                        <h3 id="bestPlatform" style="color: var(--accent-cyan); font-size: 24px; margin-bottom: 5px;">Aguardando...</h3>
+                        <p id="bestType" style="color: var(--text-muted); margin-bottom: 20px;">-</p>
+                        
+                        <div style="font-size: 48px; font-weight: bold; color: var(--accent-green); margin-bottom: 10px;">
+                            <span id="bestApy">0.00</span>% <span style="font-size: 16px; color: var(--text-muted); font-weight: normal;">APY</span>
+                        </div>
+                        
+                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; display: inline-block; min-width: 200px;">
+                            <div style="margin-bottom: 5px;"><i class="fa-solid fa-calendar-days"></i> Mensal: <b>$<span id="bestMonthly">0.00</span></b></div>
+                            <div style="color: var(--accent-gold); font-size: 12px;"><i class="fa-solid fa-shield-halved"></i> Risco: <span id="bestRisk">Baixo</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel: Lista de APYs -->
+            <div class="panel" style="margin-top: 20px;">
+                <div class="panel-header">
+                    <h2><i class="fa-solid fa-list"></i> Mercado de Renda Passiva (Live)</h2>
+                </div>
+                <div class="panel-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Plataforma</th>
+                                <th>Tipo de Produto</th>
+                                <th>APY (Anual)</th>
+                                <th>Rendimento Diário</th>
+                                <th>Nível de Risco</th>
+                            </tr>
+                        </thead>
+                        <tbody id="yieldTableBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: var(--text-muted);">A carregar dados das corretoras e DeFi...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
     </div>
-    <div class="status-badge" id="statusBadge">
-      <div class="status-pulse"></div>
-      <span id="statusText">PARADO</span>
-    </div>
-  </header>
 
-  <div class="dashboard-grid">
-    <div class="card metric-card">
-      <span class="metric-title">Moeda Ativa em Mineração</span>
-      <span class="metric-value text-green" id="metricActiveCoin">---</span>
-      <span class="metric-sub text-muted" id="metricActiveAlgo">A calcular...</span>
-    </div>
-
-    <div class="card metric-card">
-      <span class="metric-title">Lucro Líquido Estimado / Dia</span>
-      <span class="metric-value text-green" id="metricNetDaily">$0.00 / dia</span>
-    </div>
-
-    <div class="card metric-card">
-      <span class="metric-title">Previsão Mensal Líquida</span>
-      <span class="metric-value text-gold" id="metricMonthlyEst">$0.00 / mês</span>
-    </div>
-
-    <div class="card metric-card">
-      <span class="metric-title">Lucro Líquido Acumulado (Sessão)</span>
-      <span class="metric-value text-green" id="metricNetProfit">$0.000000</span>
-      <span class="metric-sub text-muted" id="metricMinedTotal">Total minerado: $0.00</span>
-    </div>
-
-    <div class="card metric-card">
-      <span class="metric-title">Consumo / Custo Energia</span>
-      <span class="metric-value text-orange" id="metricPower">600W</span>
-      <span class="metric-sub text-muted" id="metricElecCost">$0.12 / kWh</span>
-    </div>
-
-    <div class="card metric-card" id="nicehashStatusCard">
-      <span class="metric-title">Estado da Conta NiceHash</span>
-      <span class="metric-value" id="metricNicehashRigs" style="font-size:1.1rem;">A verificar...</span>
-      <span class="metric-sub" id="metricNicehashStatus" style="color: var(--text-muted);"></span>
-    </div>
-  </div>
-
-  <div class="main-content">
-    
-    <!-- Coin Rankings Table -->
-    <div class="card">
-      <h2>📊 Ranking de Rentabilidade por Moeda em Tempo Real</h2>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Moeda / Algoritmo</th>
-              <th>Receita Bruta (24h)</th>
-              <th>Custo Energia (24h)</th>
-              <th>Lucro Líquido (24h)</th>
-              <th>Fonte</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody id="coinRankingsBody">
-            <tr>
-              <td colspan="5" style="text-align: center; color: var(--text-muted);">Carregando cotações de mineração...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Control Panel -->
-    <div class="card">
-      <h2>⚙️ Parâmetros do Rig de Mineração</h2>
-      <br>
-      <form id="configForm">
-        <div class="form-group">
-          <label>Potência do Rig (MH/s)</label>
-          <input type="number" class="form-control" id="inputHashrate" value="250" step="10">
-        </div>
-
-        <div class="form-group">
-          <label>Consumo Elétrico (Watts)</label>
-          <input type="number" class="form-control" id="inputWatts" value="600" step="50">
-        </div>
-
-        <div class="form-group">
-          <label>Custo da Eletricidade ($/kWh)</label>
-          <input type="number" class="form-control" id="inputElecCost" value="0.12" step="0.01">
-        </div>
-
-        <div style="display: flex; gap: 10px; margin-top: 10px;">
-          <button type="button" class="btn btn-primary" id="btnToggleBot" style="flex: 1;">
-            ▶ Iniciar Mineração 24/7
-          </button>
-          <button type="submit" class="btn" style="background: rgba(255,255,255,0.08); color: white;">
-            💾 Salvar
-          </button>
-        </div>
-      </form>
-    </div>
-
-  </div>
-
-  <!-- Switch History -->
-  <div class="card">
-    <h2>📋 Histórico de Trocas Automáticas de Algoritmo (Auto-Switch Log)</h2>
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Hora</th>
-            <th>Moeda Anterior</th>
-            <th>Nova Moeda (Mais Rentável)</th>
-            <th>Motivo da Troca</th>
-          </tr>
-        </thead>
-        <tbody id="switchLogBody">
-          <tr>
-            <td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhuma troca efetuada ainda. O bot seleciona automaticamente a moeda mais rentável.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <script src="/static/js/app.js"></script>
+    <!-- Scripts -->
+    <script src="/static/js/app.js"></script>
 </body>
 </html>

@@ -1,123 +1,120 @@
-let isBotRunning = false;
+// YieldPro AI App.js
 
-document.addEventListener('DOMContentLoaded', () => {
-    fetchStatus();
-    setInterval(fetchStatus, 2000);
+function updateTime() {
+    const now = new Date();
+    document.getElementById('currentTime').textContent = now.toLocaleTimeString();
+}
 
-    document.getElementById('btnToggleBot').addEventListener('click', toggleBotState);
-    document.getElementById('configForm').addEventListener('submit', saveConfig);
-});
+setInterval(updateTime, 1000);
+updateTime();
 
+// Elementos
+const toggleBtn = document.getElementById('btnToggleBot');
+const saveBtn = document.getElementById('btnSaveConfig');
+const statusBadge = document.getElementById('botStatusBadge');
+
+// Fetch Status
 async function fetchStatus() {
     try {
         const res = await fetch('/api/status');
         const data = await res.json();
-
-        isBotRunning = data.is_running;
-        const badge = document.getElementById('statusBadge');
-        const statusText = document.getElementById('statusText');
-        const toggleBtn = document.getElementById('btnToggleBot');
-
-        if (isBotRunning) {
-            badge.classList.add('running');
-            statusText.innerText = 'MINERAÇÃO & AUTO-SWITCH ATIVOS';
+        
+        // Update Header and Status
+        if (data.is_running) {
+            statusBadge.textContent = 'MONITORANDO YIELD 24/7';
+            statusBadge.className = 'badge online';
+            toggleBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Parar Motor';
             toggleBtn.className = 'btn btn-danger';
-            toggleBtn.innerText = '⏸ Pausar Mineração';
         } else {
-            badge.classList.remove('running');
-            statusText.innerText = 'PARADO';
+            statusBadge.textContent = 'MOTOR PARADO';
+            statusBadge.className = 'badge offline';
+            toggleBtn.innerHTML = '<i class="fa-solid fa-play"></i> Iniciar Motor';
             toggleBtn.className = 'btn btn-primary';
-            toggleBtn.innerText = '▶ Iniciar Mineração 24/7';
         }
 
-        document.getElementById('metricActiveCoin').innerText = data.active_coin || '---';
-        document.getElementById('metricActiveAlgo').innerText  = (data.coin_rankings || []).find(c => c.is_active)?.algo || '';
-        document.getElementById('metricNetDaily').innerText    = `$${(data.active_net_daily || 0).toFixed(4)} / dia`;
-        document.getElementById('metricMonthlyEst').innerText  = `$${(data.active_monthly_est || 0).toFixed(2)} / mês`;
-        document.getElementById('metricPower').innerText       = `${data.power_consumption_watts}W (${data.rig_hashrate_mhs} MH/s)`;
-        document.getElementById('metricElecCost').innerText    = `$${(data.electricity_cost_kwh || 0).toFixed(3)} / kWh`;
+        // Update Top Cards
+        document.getElementById('valUserBalance').textContent = data.user_balance.toFixed(2);
+        document.getElementById('valActiveCoin').textContent = data.active_coin;
+        document.getElementById('valDailyUsd').textContent = data.best_daily_usd.toFixed(4);
+        document.getElementById('valTotalYield').textContent = data.total_yield_earned.toFixed(8);
 
-        // Lucro acumulado na sessão
-        document.getElementById('metricNetProfit').innerText  = `$${(data.net_profit_usd || 0).toFixed(6)}`;
-        document.getElementById('metricMinedTotal').innerText = `Minerado: $${(data.total_mined_usd || 0).toFixed(6)} | Energia: $${(data.total_electricity_usd || 0).toFixed(6)}`;
+        // Update Best Opportunity Card
+        if (data.opportunities && data.opportunities.length > 0) {
+            const best = data.opportunities[0];
+            document.getElementById('bestPlatform').textContent = best.platform;
+            document.getElementById('bestType').textContent = best.type;
+            document.getElementById('bestApy').textContent = best.apy.toFixed(2);
+            document.getElementById('bestMonthly').textContent = best.monthly_usd.toFixed(4);
+            document.getElementById('bestRisk').textContent = best.risk;
+            
+            // Alert logic
+            if (best.apy >= data.min_apy_alert) {
+                document.getElementById('bestApy').style.color = '#ffaa00'; // Gold alert
+            } else {
+                document.getElementById('bestApy').style.color = 'var(--accent-green)';
+            }
+        }
 
-        // Estado da conta NiceHash
-        const rigsEl  = document.getElementById('metricNicehashRigs');
-        const statEl  = document.getElementById('metricNicehashStatus');
-        if (data.nicehash_rigs_count > 0) {
-            rigsEl.innerText = `✅ ${data.nicehash_rigs_count} Rig(s) Ativo(s)`;
-            rigsEl.style.color = 'var(--accent-green)';
-        } else if (data.account_accessible) {
-            rigsEl.innerText = '⚠️ Conta acessível';
-            rigsEl.style.color = 'var(--accent-orange)';
+        // Update Table
+        const tbody = document.getElementById('yieldTableBody');
+        tbody.innerHTML = '';
+        
+        if (data.opportunities && data.opportunities.length > 0) {
+            data.opportunities.forEach((opp, index) => {
+                const tr = document.createElement('tr');
+                // Highlight row 1
+                if(index === 0) tr.style.backgroundColor = 'rgba(0, 242, 254, 0.05)';
+                
+                tr.innerHTML = `
+                    <td><strong>${opp.platform}</strong></td>
+                    <td>${opp.type}</td>
+                    <td style="color: var(--accent-green); font-weight: bold;">${opp.apy.toFixed(2)}%</td>
+                    <td>$${opp.daily_usd.toFixed(4)}</td>
+                    <td><span class="badge ${opp.risk.includes('Baixo') ? 'online' : 'offline'}">${opp.risk}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
         } else {
-            rigsEl.innerText = 'ℹ️ Sem hardware';
-            rigsEl.style.color = 'var(--text-muted)';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhuma oportunidade encontrada.</td></tr>';
         }
-        statEl.innerText = data.nicehash_rigs_status || '';
-
-        renderRankings(data.coin_rankings);
-        renderSwitchLog(data.switch_history);
-
+        
     } catch (err) {
-        console.error('Erro ao buscar status de mineração:', err);
+        console.error('Erro ao buscar status', err);
     }
 }
 
-function renderRankings(rankings) {
-    const tbody = document.getElementById('coinRankingsBody');
-    if (!rankings || rankings.length === 0) return;
-
-    tbody.innerHTML = rankings.map(r => `
-        <tr>
-            <td><strong>${r.name}</strong><br><small style="color:var(--text-muted)">${r.algo}</small></td>
-            <td style="color: #00f2fe;">$${r.gross_daily.toFixed(4)}</td>
-            <td style="color: var(--accent-orange);">$${r.elec_cost_daily.toFixed(4)}</td>
-            <td style="color: var(--accent-green);"><strong>+$${r.net_daily.toFixed(4)}</strong></td>
-            <td><span style="font-size:0.75rem; color:var(--text-muted);">${r.data_source || 'Estimativa'}</span></td>
-            <td><span class="${r.is_active ? 'badge-active' : 'badge-idle'}">${r.is_active ? 'MINERANDO' : 'DISPONÍVEL'}</span></td>
-        </tr>
-    `).join('');
-}
-
-function renderSwitchLog(history) {
-    const tbody = document.getElementById('switchLogBody');
-    if (!history || history.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhuma troca efetuada ainda. O bot seleciona automaticamente a moeda mais rentável.</td></tr>';
-        return;
-    }
-
-    tbody.innerHTML = history.map(h => `
-        <tr>
-            <td>${h.timestamp}</td>
-            <td style="color: var(--text-muted);">${h.from_coin}</td>
-            <td style="color: var(--accent-green);"><strong>${h.to_coin}</strong></td>
-            <td style="color: var(--text-muted);">${h.reason}</td>
-        </tr>
-    `).join('');
-}
-
-async function toggleBotState() {
-    const endpoint = isBotRunning ? '/api/stop' : '/api/start';
+// Botões
+toggleBtn.addEventListener('click', async () => {
+    const isStop = toggleBtn.classList.contains('btn-danger');
+    const endpoint = isStop ? '/api/stop' : '/api/start';
+    
     await fetch(endpoint, { method: 'POST' });
     fetchStatus();
-}
+});
 
-async function saveConfig(e) {
-    e.preventDefault();
+saveBtn.addEventListener('click', async () => {
     const config = {
-        hashrate: parseFloat(document.getElementById('inputHashrate').value),
-        watts: parseFloat(document.getElementById('inputWatts').value),
-        elec_cost: parseFloat(document.getElementById('inputElecCost').value),
-        auto_switch: true
+        active_coin: document.getElementById('selectCoin').value,
+        user_balance: document.getElementById('inputBalance').value,
+        min_apy_alert: document.getElementById('inputMinApy').value
     };
-
+    
     await fetch('/api/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config)
     });
-
-    alert('Parâmetros de mineração salvos com sucesso!');
+    
     fetchStatus();
-}
+    
+    // Pequeno feedback visual no botão
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fa-solid fa-check"></i> Salvo!';
+    setTimeout(() => {
+        saveBtn.innerHTML = originalText;
+    }, 2000);
+});
+
+// Init
+setInterval(fetchStatus, 3000);
+fetchStatus();

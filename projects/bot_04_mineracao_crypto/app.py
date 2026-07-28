@@ -3,10 +3,10 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from flask import Flask, render_template, jsonify, request
-from mining_engine import AutoMineEngine
+from staking_engine import YieldEngine
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
-bot = AutoMineEngine()
+bot = YieldEngine()
 
 @app.route('/')
 def index():
@@ -29,17 +29,16 @@ def stop_bot():
 @app.route('/api/config', methods=['POST'])
 def update_config():
     data = request.json or {}
-    hashrate = float(data.get('hashrate', 250.0))
-    watts = float(data.get('watts', 600.0))
-    elec_cost = float(data.get('elec_cost', 0.12))
-    auto_switch = bool(data.get('auto_switch', True))
+    active_coin = data.get('active_coin', 'USDT')
+    user_balance = float(data.get('user_balance', 8.75))
+    min_apy_alert = float(data.get('min_apy_alert', 10.0))
     
-    bot.update_config(hashrate, watts, elec_cost, auto_switch)
+    bot.update_config(active_coin, user_balance, min_apy_alert)
     return jsonify({"status": "updated", "config": data})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5003))
     print("==========================================================")
-    print(f"🚀 AUTOMINE PROFITABILITY AI BOT - SERVIDOR WEB (PORTA {port})")
+    print(f"🚀 YIELD PRO AI - STAKING & DEFI MONITOR (PORTA {port})")
     print("==========================================================")
     app.run(host='0.0.0.0', port=port, debug=False)
