@@ -1,10 +1,6 @@
 {
   "active_coin": "XMR",
-  "auto_switch_enabled": true,
-  "rig_hashrate_mhs": 250.0,
-  "power_consumption_watts": 600.0,
-  "electricity_cost_kwh": 0.12,
-  "total_mined_usd": 13.697391,
-  "total_electricity_usd": 0.0002,
-  "net_profit_usd": 13.697191
+  "user_balance": 8.75,
+  "min_apy_alert": 10.0,
+  "total_yield_earned": 3.0520674784373414e-09
 }

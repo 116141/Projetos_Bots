@@ -6,130 +6,119 @@
     <title>YieldPro AI - Monitor de Rendimento</title>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
-    <div class="dashboard-container">
-        <!-- Header -->
-        <header class="dashboard-header">
-            <div class="header-left">
-                <h1><i class="fa-solid fa-seedling" style="color: var(--accent-green); margin-right: 10px;"></i>Bot 04: YieldPro AI</h1>
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon" style="background: linear-gradient(135deg, #00e676 0%, #aeea00 100%);">
+                <i class="fa-solid fa-seedling"></i>
             </div>
-            <div class="header-right">
-                <span id="currentTime">--:--:--</span>
-                <div class="user-profile">
-                    <i class="fa-solid fa-user"></i> Edmilson Gil (Administrador)
-                    <span class="badge online">ONLINE</span>
-                </div>
+            <div>
+                <h1>Bot 04: YieldPro AI</h1>
+                <p>Monitorização de Staking & DeFi em Tempo Real</p>
             </div>
-        </header>
+        </div>
+        <div class="status-badge" id="botStatusBadge">
+            <div class="status-pulse"></div>
+            <span>A CARREGAR...</span>
+        </div>
+    </header>
 
-        <!-- Main Content -->
-        <main class="dashboard-main">
-            <!-- Top Cards -->
-            <div class="top-cards-row">
-                <div class="summary-card">
-                    <div class="card-title">SALDO TOTAL ALOCADO (SIMULADO)</div>
-                    <div class="card-value" style="color: var(--accent-cyan);">$<span id="valUserBalance">0.00</span></div>
-                    <div class="card-subtitle"><i class="fa-solid fa-coins"></i> <span id="valActiveCoin">USDT</span> Ativo</div>
+    <!-- Top Cards Grid -->
+    <div class="dashboard-grid">
+        <div class="card metric-card">
+            <div class="metric-title">SALDO ALOCADO SIMULADO</div>
+            <div class="metric-value text-green">$<span id="valUserBalance">0.00</span></div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Ativo: <strong id="valActiveCoin" style="color: #fff;">USDT</strong></div>
+        </div>
+        
+        <div class="card metric-card">
+            <div class="metric-title">YIELD MÁXIMO DIÁRIO</div>
+            <div class="metric-value text-gold">+$<span id="valDailyUsd">0.00</span></div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Rendimento passivo estimado</div>
+        </div>
+        
+        <div class="card metric-card" style="grid-column: span 2;">
+            <div class="metric-title">MELHOR OPORTUNIDADE (AO VIVO)</div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                <div>
+                    <div class="metric-value text-green"><span id="bestApy">0.00</span>% APY</div>
+                    <div style="font-size: 14px; color: #fff; margin-top: 4px; font-weight: 600;" id="bestPlatform">Buscando...</div>
                 </div>
-                <div class="summary-card">
-                    <div class="card-title">YIELD PASSIVO DIÁRIO (MAX)</div>
-                    <div class="card-value" style="color: var(--accent-green);">+$<span id="valDailyUsd">0.00</span></div>
-                    <div class="card-subtitle"><i class="fa-solid fa-calendar-day"></i> Estimativa</div>
-                </div>
-                <div class="summary-card">
-                    <div class="card-title">YIELD ACUMULADO (SESSÃO)</div>
-                    <div class="card-value" style="color: var(--accent-gold);">+$<span id="valTotalYield">0.00000000</span></div>
-                    <div class="card-subtitle"><i class="fa-solid fa-piggy-bank"></i> Rendimento Real Simulando Melhor APY</div>
-                </div>
-            </div>
-
-            <div class="content-grid" style="grid-template-columns: 1fr 1fr;">
-                <!-- Panel: Configurações -->
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2><i class="fa-solid fa-sliders"></i> Configurar Carteira (YieldPro)</h2>
-                    </div>
-                    <div class="panel-body">
-                        <div class="form-group">
-                            <label>Criptomoeda</label>
-                            <select id="selectCoin" class="form-control">
-                                <option value="USDT">USDT (Tether Dólar)</option>
-                                <option value="BTC">BTC (Bitcoin)</option>
-                                <option value="ETH">ETH (Ethereum)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Saldo Disponível (Em USD)</label>
-                            <input type="number" id="inputBalance" class="form-control" value="8.75" step="0.01">
-                        </div>
-                        <div class="form-group">
-                            <label>Alerta APY Mínimo (%)</label>
-                            <input type="number" id="inputMinApy" class="form-control" value="10.0" step="0.1">
-                        </div>
-                        
-                        <div style="display: flex; gap: 10px; margin-top: 20px;">
-                            <button id="btnToggleBot" class="btn btn-danger" style="flex: 1;">
-                                <i class="fa-solid fa-stop"></i> Parar Motor
-                            </button>
-                            <button id="btnSaveConfig" class="btn btn-secondary" style="flex: 1;">
-                                <i class="fa-solid fa-floppy-disk"></i> Salvar & Simular
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Panel: Melhor Oportunidade -->
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2><i class="fa-solid fa-trophy"></i> Melhor Oportunidade Atual</h2>
-                        <span id="botStatusBadge" class="badge online" style="float:right;">BUSCANDO...</span>
-                    </div>
-                    <div class="panel-body" style="text-align: center; padding-top: 30px;">
-                        <h3 id="bestPlatform" style="color: var(--accent-cyan); font-size: 24px; margin-bottom: 5px;">Aguardando...</h3>
-                        <p id="bestType" style="color: var(--text-muted); margin-bottom: 20px;">-</p>
-                        
-                        <div style="font-size: 48px; font-weight: bold; color: var(--accent-green); margin-bottom: 10px;">
-                            <span id="bestApy">0.00</span>% <span style="font-size: 16px; color: var(--text-muted); font-weight: normal;">APY</span>
-                        </div>
-                        
-                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; display: inline-block; min-width: 200px;">
-                            <div style="margin-bottom: 5px;"><i class="fa-solid fa-calendar-days"></i> Mensal: <b>$<span id="bestMonthly">0.00</span></b></div>
-                            <div style="color: var(--accent-gold); font-size: 12px;"><i class="fa-solid fa-shield-halved"></i> Risco: <span id="bestRisk">Baixo</span></div>
-                        </div>
-                    </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 12px; color: var(--text-muted);">Mensal: <strong class="text-green">+$<span id="bestMonthly">0.00</span></strong></div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Risco: <span class="badge-active" id="bestRisk">Baixo</span></div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Panel: Lista de APYs -->
-            <div class="panel" style="margin-top: 20px;">
-                <div class="panel-header">
-                    <h2><i class="fa-solid fa-list"></i> Mercado de Renda Passiva (Live)</h2>
-                </div>
-                <div class="panel-body">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Plataforma</th>
-                                <th>Tipo de Produto</th>
-                                <th>APY (Anual)</th>
-                                <th>Rendimento Diário</th>
-                                <th>Nível de Risco</th>
-                            </tr>
-                        </thead>
-                        <tbody id="yieldTableBody">
-                            <tr>
-                                <td colspan="5" style="text-align: center; color: var(--text-muted);">A carregar dados das corretoras e DeFi...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+    <!-- Main Content Grid -->
+    <div class="main-content">
+        <!-- Tabela -->
+        <div class="card">
+            <h2 style="font-size: 16px; margin-bottom: 16px;"><i class="fa-solid fa-list"></i> Mercado de Renda Passiva</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Plataforma</th>
+                            <th>Produto</th>
+                            <th>APY</th>
+                            <th>Rend. Diário</th>
+                            <th>Risco</th>
+                        </tr>
+                    </thead>
+                    <tbody id="yieldTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--text-muted);">A carregar dados dos Oráculos DeFi...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Configurações -->
+        <div class="card">
+            <h2 style="font-size: 16px; margin-bottom: 16px;"><i class="fa-solid fa-sliders"></i> Configurações</h2>
+            
+            <div class="form-group">
+                <label>Criptomoeda</label>
+                <select id="selectCoin" class="form-control">
+                    <option value="USDT">USDT (Tether Dólar)</option>
+                    <option value="BTC">BTC (Bitcoin)</option>
+                    <option value="ETH">ETH (Ethereum)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Saldo Disponível (Em USD)</label>
+                <input type="number" id="inputBalance" class="form-control" value="8.75" step="0.01">
+            </div>
+            
+            <div class="form-group">
+                <label>Alerta APY Mínimo (%)</label>
+                <input type="number" id="inputMinApy" class="form-control" value="10.0" step="0.1">
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 24px;">
+                <button id="btnToggleBot" class="btn btn-danger" style="flex: 1;">
+                    <i class="fa-solid fa-stop"></i> Parar
+                </button>
+                <button id="btnSaveConfig" class="btn btn-primary" style="flex: 1;">
+                    <i class="fa-solid fa-floppy-disk"></i> Salvar
+                </button>
+            </div>
+            
+            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                <div class="metric-title" style="margin-bottom: 8px;">YIELD ACUMULADO (SESSÃO)</div>
+                <div style="font-size: 24px; font-weight: 700; color: var(--accent-gold); font-family: var(--font-mono);">
+                    +$<span id="valTotalYield">0.00000000</span>
                 </div>
             </div>
-
-        </main>
+        </div>
     </div>
 
     <!-- Scripts -->
