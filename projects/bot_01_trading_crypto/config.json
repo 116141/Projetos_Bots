@@ -2,7 +2,7 @@
   "trading_mode": "LIVE",
   "symbol": "BTC/USDT",
   "strategy": "MA_CROSSOVER",
-  "trade_amount": 10.0,
+  "trade_amount": 3.5,
   "take_profit_pct": 2.0,
   "stop_loss_pct": 1.0,
   "usdt_balance": 10000.0,
