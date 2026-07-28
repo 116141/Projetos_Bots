@@ -24,12 +24,13 @@ try:
     # Testar ligação pedindo o saldo
     balance = exchange.fetch_balance()
     
+    print("💰 Todos os teus ativos na carteira Spot:")
+    for coin, amount in balance.get('total', {}).items():
+        if float(amount) > 0:
+            print(f"   - {coin}: {amount}")
+    
     usdt = balance.get('USDT', {}).get('free', 0.0)
     btc = balance.get('BTC', {}).get('free', 0.0)
-    
-    print("\n✅ LIGAÇÃO BEM SUCEDIDA À TUA CONTA BYBIT!")
-    print("-" * 40)
-    print(f"💰 Saldo Disponível (USDT): ${usdt:.2f}")
     print(f"💰 Saldo Disponível (BTC) : ₿{btc:.6f}")
     print("-" * 40)
     print("O Bot 01 está pronto para arrancar e usar estes fundos reais.")

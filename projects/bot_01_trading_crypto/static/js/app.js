@@ -53,7 +53,11 @@ async function fetchStatus() {
         const res = await fetch('/api/status');
         const data = await res.json();
 
-        // Update Status Badge
+        if (data.trading_mode) {
+        document.getElementById('uiTradingMode').textContent = data.trading_mode;
+      }
+      
+      // Update Status Badge
         isBotRunning = data.is_running;
         const badge = document.getElementById('statusBadge');
         const statusText = document.getElementById('statusText');

@@ -355,6 +355,12 @@ class TradingBotEngine:
                 current_crypto_value -= (current_crypto_value * self.trading_fee)
                 
             total_equity = self.usdt_balance + current_crypto_value
+            
+            # Reset initial balance to real equity if switching to LIVE for the first time
+            if self.trading_mode == "LIVE" and self.initial_balance == 10000.0 and total_equity > 0 and total_equity < 9900:
+                self.initial_balance = total_equity
+                self._save_config()
+                
             net_pnl = total_equity - self.initial_balance
             net_pnl_pct = (net_pnl / self.initial_balance) * 100
 
