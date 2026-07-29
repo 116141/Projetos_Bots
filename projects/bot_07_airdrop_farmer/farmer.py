@@ -158,7 +158,7 @@ class AirdropFarmerEngine:
                     }
                     
                     signed_tx = self.web3.eth.account.sign_transaction(tx, pk)
-                    tx_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
+                    tx_hash = self.web3.eth.send_raw_transaction(signed_tx.raw_transaction)
                     
                     self.log(f"✅ Transação executada! Hash: {self.web3.to_hex(tx_hash)[:10]}...")
                     
