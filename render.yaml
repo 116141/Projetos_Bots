@@ -100,7 +100,7 @@ services:
     region: frankfurt
     plan: free
     buildCommand: cd projects/bot_06_social_affiliate && pip install -r ../../requirements.txt
-    startCommand: cd projects/bot_06_social_affiliate && gunicorn app:app
+    startCommand: cd projects/bot_06_social_affiliate && gunicorn app:app --timeout 120
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0

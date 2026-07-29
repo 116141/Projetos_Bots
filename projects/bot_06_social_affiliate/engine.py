@@ -3,19 +3,11 @@ import requests
 import asyncio
 import edge_tts
 import uuid
-import google.generativeai as genai
+import g4f
 from moviepy.editor import VideoFileClip, AudioFileClip
 
 # Obter as chaves das Variáveis de Ambiente
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY", "")
-
-# Configurar Gemini
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    gemini_model = genai.GenerativeModel('gemini-1.5-flash')
-else:
-    gemini_model = None
 
 class VideoFactory:
     def __init__(self, output_dir="static/videos"):
@@ -42,10 +34,13 @@ class VideoFactory:
         """
         
         try:
-            response = gemini_model.generate_content(prompt)
-            return response.text.strip()
+            response = g4f.ChatCompletion.create(
+                model=g4f.models.gpt_4,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.strip()
         except Exception as e:
-            print(f"Erro no Gemini: {e}")
+            print(f"Erro no G4F: {e}")
             return "Sabias que a maioria das pessoas perde grandes oportunidades todos os dias? Descobre como podes mudar isso agora. Clica no link da minha bio."
 
     async def generate_voiceover(self, script, filename):

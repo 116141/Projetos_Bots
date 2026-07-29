@@ -7,6 +7,6 @@ ccxt>=4.1.0
 python-telegram-bot>=20.0
 beautifulsoup4>=4.12.0
 web3>=6.10.0
-google-generativeai
+g4f
 edge-tts
 moviepy==1.0.3
