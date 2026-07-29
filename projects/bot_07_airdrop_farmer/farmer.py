@@ -16,7 +16,7 @@ class AirdropFarmerEngine:
         
         # Testnet RPCs (Sepolia é a mais usada para farmar airdrops iniciais)
         self.rpc_urls = {
-            "sepolia": "https://rpc.sepolia.org",
+            "sepolia": "https://ethereum-sepolia-rpc.publicnode.com",
             "base_sepolia": "https://sepolia.base.org"
         }
         
