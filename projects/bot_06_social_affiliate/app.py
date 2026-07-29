@@ -7,6 +7,14 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 def index():
     return render_template('index.html')
 
+@app.route('/api/status', methods=['GET'])
+def get_status():
+    return jsonify({
+        "online": True,
+        "is_running": False, # Não há processo 24/7 neste bot, apenas gerador sob demanda
+        "status_message": "A aguardar chaves API (Gemini & Pexels)"
+    })
+
 @app.route('/api/generate', methods=['POST'])
 def generate_content():
     data = request.json
