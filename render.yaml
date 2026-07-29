@@ -12,6 +12,8 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: BOT_07_URL
+        value: https://bot-07-airdrop-farmer.onrender.com
 
   # --------------------------------------------------
   # 01. Bot QuantTrader AI (Trading Crypto)
@@ -83,6 +85,20 @@ services:
     plan: free
     buildCommand: cd projects/bot_05_sentimento_ia && pip install -r requirements.txt
     startCommand: cd projects/bot_05_sentimento_ia && gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+  # --------------------------------------------------
+  # 07. Bot Airdrop Farmer
+  # --------------------------------------------------
+  - type: web
+    name: bot-07-airdrop-farmer
+    env: python
+    region: frankfurt
+    plan: free
+    buildCommand: cd projects/bot_07_airdrop_farmer && pip install -r ../../requirements.txt
+    startCommand: cd projects/bot_07_airdrop_farmer && gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
