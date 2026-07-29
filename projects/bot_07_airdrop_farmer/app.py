@@ -7,6 +7,7 @@ from farmer import AirdropFarmerEngine
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 bot = AirdropFarmerEngine()
+bot.start_farming() # Iniciar automaticamente assim que o servidor acorda
 
 @app.route('/')
 def index():
