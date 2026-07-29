@@ -1,5 +1,6 @@
 import os
 from flask import Flask, render_template, jsonify, request
+from engine import VideoFactory
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
@@ -23,16 +24,18 @@ def generate_content():
     if not niche:
         return jsonify({"status": "error", "message": "Niche/Product required"}), 400
         
-    # TODO: Implement AI Video Generation Engine
-    # For now, return mock data
-    mock_script = f"Hook: Did you know this {niche} trick?\nBody: It solves your biggest problem...\nCTA: Click the link in my bio to get yours!"
+    factory = VideoFactory()
+    result = factory.create_viral_video(niche)
     
-    return jsonify({
-        "status": "success",
-        "script": mock_script,
-        "video_url": "#", # Future MP4 download URL
-        "message": "Fábrica em construção. Módulo IA será ativado brevemente."
-    })
+    if result["status"] == "success":
+        return jsonify({
+            "status": "success",
+            "script": result["script"],
+            "video_url": result["video_url"],
+            "message": "Vídeo renderizado com sucesso!"
+        })
+    else:
+        return jsonify(result), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5005))
