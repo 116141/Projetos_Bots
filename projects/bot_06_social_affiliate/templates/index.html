@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot 06: Social Affiliate AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Reutilizar estilos core do Hub se necessário, mas mantendo independente -->
+    <style>
+        :root {
+            --bg-color: #0f0f13;
+            --panel-bg: #1a1a24;
+            --accent-color: #ff2a6d; /* Neon Pink para destacar do Bot 07 */
+            --accent-glow: 0 0 10px rgba(255, 42, 109, 0.5);
+            --text-main: #e0e0e0;
+            --text-muted: #888899;
+            --border-color: #2a2a35;
+        }
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Rajdhani', sans-serif;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .header h2 {
+            margin: 0;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header p {
+            margin: 5px 0 0 0;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .panel h3 {
+            margin-top: 0;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--accent-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-muted);
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            background: #000;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 4px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .btn-generate {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, #ff2a6d, #d91c5c);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+        .btn-generate:hover {
+            box-shadow: var(--accent-glow);
+            transform: translateY(-2px);
+        }
+        .btn-generate:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .output-box {
+            background: #000;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 15px;
+            min-height: 200px;
+            font-family: monospace;
+            color: #00ffcc;
+            white-space: pre-wrap;
+            margin-bottom: 15px;
+        }
+        .status-msg {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        /* Loading Animation */
+        .loader {
+            display: none;
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--text-muted);
+            border-bottom-color: var(--accent-color);
+            border-radius: 50%;
+            animation: rotation 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <h2>🎬 Bot 06: Social Affiliate AI</h2>
+            <p>Fábrica de Conteúdo Viral (TikTok, Reels, Shorts) - Automático em MP4</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Painel de Controlo -->
+        <div class="panel">
+            <h3>⚙️ Motor de Criação</h3>
+            <div class="form-group">
+                <label>Produto Afiliado / Nicho Alvo</label>
+                <input type="text" id="nicheInput" placeholder="Ex: Microfone sem Fios Aliexpress, Dicas Finanças..." />
+            </div>
+            
+            <button id="btnGenerate" class="btn-generate">Gerar Vídeo Viral Completo</button>
+            <div id="loading" class="loader"></div>
+            <div id="statusMsg" class="status-msg">Pronto para criar conteúdo.</div>
+        </div>
+
+        <!-- Painel de Resultados -->
+        <div class="panel">
+            <h3>🎥 Estúdio de Saída</h3>
+            <div id="outputScript" class="output-box">O teu script e vídeo MP4 aparecerão aqui...</div>
+            <div id="downloadArea" style="display: none; text-align: center;">
+                <p style="color: #00ffcc; font-weight: bold;">Vídeo Renderizado com Sucesso!</p>
+                <a href="#" id="downloadLink" class="btn-generate" style="display: inline-block; text-decoration: none; padding: 10px 20px; width: auto; font-size: 14px; background: linear-gradient(90deg, #00ffcc, #00b38f); color: #000;">⬇️ Download MP4 Final</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('btnGenerate').addEventListener('click', async () => {
+            const niche = document.getElementById('nicheInput').value;
+            const btn = document.getElementById('btnGenerate');
+            const loader = document.getElementById('loading');
+            const statusMsg = document.getElementById('statusMsg');
+            const outputBox = document.getElementById('outputScript');
+            const downloadArea = document.getElementById('downloadArea');
+
+            if (!niche) {
+                alert('Por favor, insere um Produto ou Nicho!');
+                return;
+            }
+
+            btn.disabled = true;
+            loader.style.display = 'block';
+            statusMsg.innerText = 'Inteligência Artificial a escrever guião e a gerar vídeo...';
+            outputBox.innerText = '';
+            downloadArea.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ niche: niche })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    outputBox.innerText = data.script + "\n\n" + data.message;
+                    if (data.video_url && data.video_url !== '#') {
+                        document.getElementById('downloadLink').href = data.video_url;
+                        downloadArea.style.display = 'block';
+                    }
+                    statusMsg.innerText = 'Geração concluída!';
+                } else {
+                    outputBox.innerText = 'Erro: ' + data.message;
+                    statusMsg.innerText = 'Ocorreu um erro.';
+                }
+            } catch (error) {
+                outputBox.innerText = 'Erro de comunicação com o servidor Bot 06.';
+                statusMsg.innerText = 'Ocorreu um erro.';
+            } finally {
+                btn.disabled = false;
+                loader.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

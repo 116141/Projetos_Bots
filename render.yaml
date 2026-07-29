@@ -14,6 +14,8 @@ services:
         value: 3.11.0
       - key: BOT_07_URL
         value: https://bot-07-airdrop-farmer.onrender.com
+      - key: BOT_06_URL
+        value: https://bot-06-social-affiliate.onrender.com
 
   # --------------------------------------------------
   # 01. Bot QuantTrader AI (Trading Crypto)
@@ -85,6 +87,20 @@ services:
     plan: free
     buildCommand: cd projects/bot_05_sentimento_ia && pip install -r requirements.txt
     startCommand: cd projects/bot_05_sentimento_ia && gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+  # --------------------------------------------------
+  # 06. Bot Social Affiliate AI
+  # --------------------------------------------------
+  - type: web
+    name: bot-06-social-affiliate
+    env: python
+    region: frankfurt
+    plan: free
+    buildCommand: cd projects/bot_06_social_affiliate && pip install -r ../../requirements.txt
+    startCommand: cd projects/bot_06_social_affiliate && gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
