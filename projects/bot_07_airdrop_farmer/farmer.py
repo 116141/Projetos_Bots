@@ -43,6 +43,24 @@ class AirdropFarmerEngine:
         print(formatted)
 
     def _load_wallets(self):
+        # Primeiro, tentar carregar das variáveis de ambiente (Render) para não perder chaves quando o servidor reinicia
+        env_wallets = []
+        for i in range(1, 4):
+            pk = os.environ.get(f'GHOST_PK_{i}')
+            if pk:
+                account = Account.from_key(pk)
+                env_wallets.append({
+                    "address": account.address,
+                    "private_key": account.key.hex(),
+                    "total_txs": 0
+                })
+        
+        if env_wallets:
+            self.wallets = env_wallets
+            self.log(f"Carregadas {len(self.wallets)} carteiras permanentes das Variáveis de Ambiente.")
+            return
+
+        # Fallback para o ficheiro local
         if os.path.exists(self.wallets_file):
             try:
                 with open(self.wallets_file, 'r', encoding='utf-8') as f:
