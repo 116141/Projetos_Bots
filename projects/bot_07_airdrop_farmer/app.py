@@ -7,7 +7,6 @@ from farmer import AirdropFarmerEngine
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 bot = AirdropFarmerEngine()
-bot.start_farming() # Iniciar automaticamente assim que o servidor acorda
 
 @app.route('/')
 def index():
@@ -15,6 +14,10 @@ def index():
 
 @app.route('/api/status', methods=['GET'])
 def get_status():
+    # Iniciar o bot na primeira vez que o painel pergunta pelo status (Gunicorn safe)
+    if getattr(app, 'first_run', True):
+        bot.start_farming()
+        app.first_run = False
     return jsonify(bot.get_status())
 
 @app.route('/api/start', methods=['POST'])
