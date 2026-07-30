@@ -2,6 +2,26 @@ let chart = null;
 let isBotRunning = false;
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Restaurar configs salvas
+    const saved = localStorage.getItem('bot01_config');
+    if (saved) {
+        try {
+            const config = JSON.parse(saved);
+            if (config.symbol) document.getElementById('selectSymbol').value = config.symbol;
+            if (config.strategy) document.getElementById('selectStrategy').value = config.strategy;
+            if (config.trade_amount) document.getElementById('inputTradeAmount').value = config.trade_amount;
+            if (config.take_profit) document.getElementById('inputTakeProfit').value = config.take_profit;
+            if (config.stop_loss) document.getElementById('inputStopLoss').value = config.stop_loss;
+            
+            // Enviar silenciosamente para a backend
+            fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+        } catch(err) {}
+    }
+
     initChart();
     fetchStatus();
     setInterval(fetchStatus, 2000);
@@ -158,7 +178,7 @@ async function toggleBotState() {
 }
 
 async function saveConfig(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const config = {
         symbol: document.getElementById('selectSymbol').value,
         strategy: document.getElementById('selectStrategy').value,
@@ -167,12 +187,15 @@ async function saveConfig(e) {
         stop_loss: parseFloat(document.getElementById('inputStopLoss').value)
     };
 
+    // Guardar no browser do utilizador para sobreviver ao Vercel
+    localStorage.setItem('bot01_config', JSON.stringify(config));
+
     await fetch('/api/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config)
     });
 
-    alert('Configurações do bot atualizadas com sucesso!');
+    if (e) alert('Configurações do bot atualizadas com sucesso!');
     fetchStatus();
 }

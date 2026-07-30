@@ -2,6 +2,25 @@ let isBotRunning = false;
 let rawTradesList = [];
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Restaurar configs salvas
+    const saved = localStorage.getItem('bot03_config');
+    if (saved) {
+        try {
+            const config = JSON.parse(saved);
+            if (config.trading_mode) document.getElementById('selectTradingMode').value = config.trading_mode;
+            if (config.symbol) document.getElementById('selectSymbol').value = config.symbol;
+            if (config.min_spread) document.getElementById('inputMinSpread').value = config.min_spread;
+            if (config.trade_amount) document.getElementById('inputTradeAmount').value = config.trade_amount;
+            
+            // Enviar silenciosamente para a backend
+            fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+        } catch(err) {}
+    }
+
     fetchStatus();
     setInterval(fetchStatus, 2000);
 
@@ -162,7 +181,7 @@ function parseLocaleFloat(val) {
 }
 
 async function saveConfig(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const config = {
         trading_mode: document.getElementById('selectTradingMode').value,
         symbol: document.getElementById('selectSymbol').value,
@@ -170,12 +189,15 @@ async function saveConfig(e) {
         trade_amount: parseLocaleFloat(document.getElementById('inputTradeAmount').value)
     };
 
+    // Guardar no browser do utilizador
+    localStorage.setItem('bot03_config', JSON.stringify(config));
+
     await fetch('/api/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config)
     });
 
-    alert(`Modo de Operação (${config.trading_mode === 'LIVE' ? 'CONTA REAL' : 'BANCA SIMULADA'}) e parâmetros salvos com sucesso!`);
+    if (e) alert(`Modo de Operação (${config.trading_mode === 'LIVE' ? 'CONTA REAL' : 'BANCA SIMULADA'}) e parâmetros salvos com sucesso e guardados no browser!`);
     fetchStatus();
 }
