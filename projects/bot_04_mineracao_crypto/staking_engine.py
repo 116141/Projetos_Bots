@@ -64,22 +64,22 @@ class YieldEngine:
         cefi_rates = []
         if self.active_coin in ["USDT", "USDC", "DAI"]:
             cefi_rates.extend([
-                {"platform": "Uniswap V3 (Arbitrum)", "type": "Liquidity Pool", "apy": 45.5, "risk": "Médio (DeFi Smart Contract)"},
-                {"platform": "Aave V3 (Optimism)", "type": "Lending", "apy": 22.3, "risk": "Médio (DeFi Smart Contract)"},
-                {"platform": "Raydium (Solana)", "type": "Liquidity Pool", "apy": 142.1, "risk": "Alto (Degen Pool)"},
+                {"platform": "Uniswap V3 (Arbitrum)", "type": "Liquidity Pool", "apy": 25.5, "risk": "Médio (DeFi Smart Contract)"},
+                {"platform": "Aave V3 (Optimism)", "type": "Lending", "apy": 12.3, "risk": "Baixo (DeFi Seguro)"},
+                {"platform": "Raydium (Solana)", "type": "Liquidity Pool", "apy": 32.1, "risk": "Médio (Liquidity Pool)"},
                 {"platform": "Bybit Earn", "type": "Flexible Savings", "apy": 12.5, "risk": "Baixo"},
                 {"platform": "Binance Earn", "type": "Simple Earn", "apy": 10.3, "risk": "Baixo"}
             ])
         elif self.active_coin in ["BTC", "ETH"]:
             cefi_rates.extend([
-                {"platform": "Pendle Finance", "type": "Yield Trading", "apy": 35.8, "risk": "Alto (Smart Contract)"},
+                {"platform": "Pendle Finance", "type": "Yield Trading", "apy": 18.8, "risk": "Médio (Smart Contract)"},
                 {"platform": "Lido Finance", "type": "Liquid Staking", "apy": 4.5, "risk": "Baixo"},
                 {"platform": "Bybit Earn", "type": "Fixed 30d", "apy": 3.5, "risk": "Baixo"},
                 {"platform": "Binance Earn", "type": "Flexible", "apy": 1.2, "risk": "Baixo"}
             ])
         else:
             cefi_rates.extend([
-                {"platform": "GMX (Arbitrum)", "type": "GLP Staking", "apy": 55.4, "risk": "Alto (Market Risk)"},
+                {"platform": "GMX (Arbitrum)", "type": "GLP Staking", "apy": 28.4, "risk": "Médio (Market Risk)"},
                 {"platform": "Bybit Earn", "type": "Liquid Staking", "apy": 4.1, "risk": "Baixo"},
                 {"platform": "Binance ETH2.0", "type": "Staking", "apy": 3.2, "risk": "Baixo"}
             ])
