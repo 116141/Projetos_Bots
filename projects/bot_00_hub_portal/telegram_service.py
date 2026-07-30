@@ -12,25 +12,32 @@ logger = logging.getLogger(__name__)
 
 class TelegramService:
     def __init__(self):
-        self.bot_token = os.environ.get('TELEGRAM_BOT_TOKEN', '')
-        self.chat_id = os.environ.get('TELEGRAM_CHAT_ID', '')
-        self.api_url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage" if self.bot_token else None
+        pass
+
+    def get_credentials(self):
+        token = os.environ.get('TELEGRAM_BOT_TOKEN', '').strip()
+        chat_id = os.environ.get('TELEGRAM_CHAT_ID', '').strip()
+        return token, chat_id
 
     def is_configured(self):
-        return bool(self.bot_token and self.chat_id)
+        token, chat_id = self.get_credentials()
+        return bool(token and chat_id)
 
     def send_message(self, text):
-        if not self.is_configured():
+        token, chat_id = self.get_credentials()
+        if not token or not chat_id:
             logger.warning("Telegram Bot Token ou Chat ID não estão configurados nas Variáveis de Ambiente.")
             return False, "Credenciais do Telegram em falta."
             
+        api_url = f"https://api.telegram.org/bot{token}/sendMessage"
+            
         try:
             payload = {
-                'chat_id': self.chat_id,
+                'chat_id': chat_id,
                 'text': text,
                 'parse_mode': 'Markdown'
             }
-            response = requests.post(self.api_url, json=payload, timeout=10)
+            response = requests.post(api_url, json=payload, timeout=10)
             
             if response.status_code == 200:
                 return True, "Mensagem enviada com sucesso."
