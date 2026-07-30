@@ -11,8 +11,9 @@ class CryptoSentinelEngine:
         self.config_file = os.path.join(os.path.dirname(__file__), 'config.json')
         self.is_running = True
         self.fear_greed_index = 68  # 0-100 (68 = Greed / Otimismo)
+        self.is_monitoring = False
         self.overall_sentiment = "BULLISH"
-        self.min_impact_threshold = 0.5
+        self.min_impact_threshold = 0.90
         
         # Stats
         self.signals_emitted_count = 0
@@ -40,7 +41,8 @@ class CryptoSentinelEngine:
             try:
                 with open(self.config_file, 'r', encoding='utf-8') as f:
                     cfg = json.load(f)
-                    self.min_impact_threshold = float(cfg.get('min_impact_threshold', 0.5))
+                    if cfg:
+                        self.min_impact_threshold = float(cfg.get('min_impact_threshold', 0.90))
             except Exception:
                 pass
 
@@ -83,8 +85,8 @@ class CryptoSentinelEngine:
             }
             self.sentiment_history.insert(0, headline_record)
 
-            # Generate High-Confidence AI Signal if impact > 75%
-            if news["impact"] >= 0.75:
+            # Generate High-Confidence AI Signal if impact >= 90%
+            if news["impact"] >= 0.90:
                 self.signals_emitted_count += 1
                 signal_type = "STRONG BUY" if news["type"] == "BULLISH" else "STRONG SELL"
                 

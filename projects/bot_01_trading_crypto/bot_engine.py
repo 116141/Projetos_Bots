@@ -16,7 +16,7 @@ class TradingBotEngine:
         self.symbol = "BTC/USDT"
         self.strategy = "MA_CROSSOVER"
         self.trade_amount = 10.0    # $ per trade
-        self.take_profit_pct = 2.0  # %
+        self.take_profit_pct = 1.0  # % (ajustado para scalping)
         self.stop_loss_pct = 1.0    # %
         self.interval = "5m"        # Usar velas de 5 minutos
         
@@ -68,7 +68,7 @@ class TradingBotEngine:
                     self.symbol = cfg.get('symbol', 'BTC/USDT')
                     self.strategy = cfg.get('strategy', 'MA_CROSSOVER')
                     self.trade_amount = float(cfg.get('trade_amount', 10.0))
-                    self.take_profit_pct = float(cfg.get('take_profit_pct', 2.0))
+                    self.take_profit_pct = float(cfg.get('take_profit_pct', 1.0))
                     self.stop_loss_pct = float(cfg.get('stop_loss_pct', 1.0))
                     
                     if self.trading_mode == "PAPER":

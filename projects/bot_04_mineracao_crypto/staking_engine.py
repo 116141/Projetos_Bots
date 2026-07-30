@@ -61,22 +61,30 @@ class YieldEngine:
         new_opps = []
         
         # 1. Fallbacks CeFi realistas (Bybit/Binance)
-        cefi_rates = {
-            "USDT": [
+        cefi_rates = []
+        if self.active_coin in ["USDT", "USDC", "DAI"]:
+            cefi_rates.extend([
+                {"platform": "Uniswap V3 (Arbitrum)", "type": "Liquidity Pool", "apy": 45.5, "risk": "Médio (DeFi Smart Contract)"},
+                {"platform": "Aave V3 (Optimism)", "type": "Lending", "apy": 22.3, "risk": "Médio (DeFi Smart Contract)"},
+                {"platform": "Raydium (Solana)", "type": "Liquidity Pool", "apy": 142.1, "risk": "Alto (Degen Pool)"},
                 {"platform": "Bybit Earn", "type": "Flexible Savings", "apy": 12.5, "risk": "Baixo"},
                 {"platform": "Binance Earn", "type": "Simple Earn", "apy": 10.3, "risk": "Baixo"}
-            ],
-            "BTC": [
+            ])
+        elif self.active_coin in ["BTC", "ETH"]:
+            cefi_rates.extend([
+                {"platform": "Pendle Finance", "type": "Yield Trading", "apy": 35.8, "risk": "Alto (Smart Contract)"},
+                {"platform": "Lido Finance", "type": "Liquid Staking", "apy": 4.5, "risk": "Baixo"},
                 {"platform": "Bybit Earn", "type": "Fixed 30d", "apy": 3.5, "risk": "Baixo"},
                 {"platform": "Binance Earn", "type": "Flexible", "apy": 1.2, "risk": "Baixo"}
-            ],
-            "ETH": [
+            ])
+        else:
+            cefi_rates.extend([
+                {"platform": "GMX (Arbitrum)", "type": "GLP Staking", "apy": 55.4, "risk": "Alto (Market Risk)"},
                 {"platform": "Bybit Earn", "type": "Liquid Staking", "apy": 4.1, "risk": "Baixo"},
                 {"platform": "Binance ETH2.0", "type": "Staking", "apy": 3.2, "risk": "Baixo"}
-            ]
-        }
+            ])
         
-        for opp in cefi_rates.get(self.active_coin, []):
+        for opp in cefi_rates:
             new_opps.append(opp)
             
         # 2. Fetch DeFi Llama
