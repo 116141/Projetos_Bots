@@ -1,10 +1,18 @@
 import os
 import json
 import requests
+import logging
 from flask import Flask, render_template, jsonify, request, session, redirect, url_for
+from telegram_service import TelegramService
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.urandom(24)
+
+# Instância do Serviço de Telegram
+telegram = TelegramService()
 
 USERS_FILE = os.path.join(os.path.dirname(__file__), 'users_db.json')
 
@@ -92,6 +100,27 @@ def get_hub_status():
             status_summary[key] = {"online": False, "is_running": False}
             
     return jsonify(status_summary)
+
+@app.route('/api/telegram/test', methods=['POST'])
+def test_telegram():
+    if not telegram.is_configured():
+        return jsonify({"success": False, "message": "Tokens não configurados."}), 400
+        
+    hub_data = {}
+    for bot_id, info in BOT_SERVICES.items():
+        hub_data[bot_id] = {'status': 'offline', 'data': {}}
+        try:
+            res = requests.get(f"{info['url']}/api/status", timeout=2.0)
+            if res.status_code == 200:
+                hub_data[bot_id]['status'] = 'online'
+                hub_data[bot_id]['data'] = res.json()
+        except Exception:
+            pass
+            
+    report_text = telegram.generate_daily_report(hub_data)
+    success, msg = telegram.send_message(report_text)
+    
+    return jsonify({"success": success, "message": msg})
 
 @app.route('/api/users/add', methods=['POST'])
 def add_user():

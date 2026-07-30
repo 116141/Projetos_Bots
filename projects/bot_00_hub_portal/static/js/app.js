@@ -144,3 +144,18 @@ async function checkHubStatus() {
         console.error('Erro ao verificar status do hub:', err);
     }
 }
+
+async function testTelegram() {
+    try {
+        alert('A enviar relatório para o Telegram... Por favor, aguarda.');
+        const response = await fetch('/api/telegram/test', { method: 'POST' });
+        const data = await response.json();
+        if (data.success) {
+            alert('✅ Relatório enviado com sucesso para o teu telemóvel!');
+        } else {
+            alert('❌ Erro: ' + data.message + '\n\nVerifica se configuraste o TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID nas Variáveis de Ambiente.');
+        }
+    } catch (error) {
+        alert('Erro ao ligar ao servidor para testar Telegram.');
+    }
+}
