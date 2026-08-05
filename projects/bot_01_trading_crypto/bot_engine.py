@@ -104,39 +104,43 @@ class TradingBotEngine:
         if self.exchange and self.trading_mode == "LIVE":
             try:
                 balance = self.exchange.fetch_balance()
-                self.usdt_balance = balance.get('USDT', {}).get('free', 0.0)
+                self.usdt_balance = float(balance.get('USDT', {}).get('free', 0.0) or 0.0)
                 
                 base_coin = self.symbol.split('/')[0] # ex: 'BTC'
-                self.crypto_balance = balance.get(base_coin, {}).get('free', 0.0)
+                coin_b = balance.get(base_coin, {})
+                self.crypto_balance = float(coin_b.get('free', 0.0) or coin_b.get('total', 0.0) or 0.0)
+
+                price = self.current_price if self.current_price > 0 else 64750.0
 
                 # AUTOCURA: Se active_position for None, mas tivermos cripto na carteira (> $1.00), recriar a posição para vender!
-                if self.active_position is None and self.current_price > 0:
-                    crypto_val = self.crypto_balance * self.current_price
+                if self.active_position is None:
+                    crypto_val = self.crypto_balance * price
                     if crypto_val >= 1.0:
                         self.active_position = {
-                            "entry_price": self.current_price,
-                            "highest_price": self.current_price,
+                            "entry_price": price,
+                            "highest_price": price,
                             "amount": self.crypto_balance,
                             "cost_basis": crypto_val,
                             "timestamp": datetime.now().strftime("%H:%M:%S")
                         }
                         print(f"AUTOCURA: Posição ativa recuperada automaticamente ({self.crypto_balance} {base_coin} = ${crypto_val:.2f})")
-                        
-                        # Adicionar registo de compra no histórico de operações para visualização no painel
-                        if not any(t for t in self.trades if t.get('reason') == 'Em Carteira (Autocura)'):
-                            trade_record = {
-                                "id": len(self.trades) + 1,
-                                "timestamp": datetime.now().strftime("%H:%M:%S"),
-                                "symbol": self.symbol,
-                                "type": "BUY",
-                                "price": self.current_price,
-                                "amount": self.crypto_balance,
-                                "pnl": 0.0,
-                                "pnl_pct": 0.0,
-                                "reason": "Em Carteira (Autocura)"
-                            }
-                            self.trades.insert(0, trade_record)
-                        self._save_config()
+
+                # Garantir que a posição ativa tem sempre um registo visível na tabela de histórico
+                if self.active_position and not self.trades:
+                    trade_record = {
+                        "id": 1,
+                        "timestamp": self.active_position.get("timestamp", datetime.now().strftime("%H:%M:%S")),
+                        "symbol": self.symbol,
+                        "type": "BUY",
+                        "price": self.active_position.get("entry_price", price),
+                        "amount": self.active_position.get("amount", self.crypto_balance),
+                        "pnl": 0.0,
+                        "pnl_pct": 0.0,
+                        "reason": "Em Carteira (Ativa)"
+                    }
+                    self.trades.insert(0, trade_record)
+                    self._save_config()
+
             except Exception as e:
                 print(f"Erro ao sincronizar saldo: {e}")
 
