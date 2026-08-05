@@ -76,6 +76,7 @@ class TradingBotEngine:
                         self.crypto_balance = float(cfg.get('crypto_balance', 0.0))
                         self.initial_balance = float(cfg.get('initial_balance', 10000.0))
                     self.active_position = cfg.get('active_position', None)
+                    self.trades = cfg.get('trades', [])
             except Exception:
                 pass
 
@@ -91,7 +92,8 @@ class TradingBotEngine:
                 'usdt_balance': round(self.usdt_balance, 4),
                 'crypto_balance': round(self.crypto_balance, 6),
                 'initial_balance': round(self.initial_balance, 4),
-                'active_position': self.active_position
+                'active_position': self.active_position,
+                'trades': self.trades[:50]
             }
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(cfg, f, indent=2)
@@ -119,6 +121,21 @@ class TradingBotEngine:
                             "timestamp": datetime.now().strftime("%H:%M:%S")
                         }
                         print(f"AUTOCURA: Posição ativa recuperada automaticamente ({self.crypto_balance} {base_coin} = ${crypto_val:.2f})")
+                        
+                        # Adicionar registo de compra no histórico de operações para visualização no painel
+                        if not any(t for t in self.trades if t.get('reason') == 'Em Carteira (Autocura)'):
+                            trade_record = {
+                                "id": len(self.trades) + 1,
+                                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                                "symbol": self.symbol,
+                                "type": "BUY",
+                                "price": self.current_price,
+                                "amount": self.crypto_balance,
+                                "pnl": 0.0,
+                                "pnl_pct": 0.0,
+                                "reason": "Em Carteira (Autocura)"
+                            }
+                            self.trades.insert(0, trade_record)
                         self._save_config()
             except Exception as e:
                 print(f"Erro ao sincronizar saldo: {e}")
