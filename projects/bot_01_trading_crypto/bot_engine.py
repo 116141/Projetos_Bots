@@ -15,10 +15,10 @@ class TradingBotEngine:
         self.is_running = True
         self.symbol = "BTC/USDT"
         self.strategy = "MA_CROSSOVER"
-        self.trade_amount = 5.0    # $ per trade (ajustado para bancas pequenas)
-        self.take_profit_pct = 1.0  # % (ajustado para scalping)
-        self.stop_loss_pct = 1.0    # %
-        self.interval = "5m"        # Usar velas de 5 minutos
+        self.trade_amount = 5.0    # $ per trade
+        self.take_profit_pct = 0.5  # % (ajustado para scalping rapido 1m)
+        self.stop_loss_pct = 0.4    # % (gestão de risco curta)
+        self.interval = "1m"        # Usar velas de 1 minuto para mais entradas
         
         # CCXT Exchange Setup (Bybit Spot)
         self.api_key = os.getenv("BYBIT_API_KEY", "")
@@ -106,6 +106,20 @@ class TradingBotEngine:
                 
                 base_coin = self.symbol.split('/')[0] # ex: 'BTC'
                 self.crypto_balance = balance.get(base_coin, {}).get('free', 0.0)
+
+                # AUTOCURA: Se active_position for None, mas tivermos cripto na carteira (> $1.00), recriar a posição para vender!
+                if self.active_position is None and self.current_price > 0:
+                    crypto_val = self.crypto_balance * self.current_price
+                    if crypto_val >= 1.0:
+                        self.active_position = {
+                            "entry_price": self.current_price,
+                            "highest_price": self.current_price,
+                            "amount": self.crypto_balance,
+                            "cost_basis": crypto_val,
+                            "timestamp": datetime.now().strftime("%H:%M:%S")
+                        }
+                        print(f"AUTOCURA: Posição ativa recuperada automaticamente ({self.crypto_balance} {base_coin} = ${crypto_val:.2f})")
+                        self._save_config()
             except Exception as e:
                 print(f"Erro ao sincronizar saldo: {e}")
 
@@ -232,14 +246,20 @@ class TradingBotEngine:
         
         if self.trading_mode == "LIVE" and self.exchange:
             try:
-                # Verificar se tem saldo real na corretora (adicionar folga para taxas)
-                if self.usdt_balance >= (trade_cost * 1.002):
+                # Dimensionamento Dinâmico: se o saldo USDT for inferior a trade_cost (ex: $5), mas >= $2.0, usar 98% do saldo disponível!
+                actual_cost = trade_cost
+                if self.usdt_balance < (trade_cost * 1.002) and self.usdt_balance >= 2.0:
+                    actual_cost = self.usdt_balance * 0.98
+                    amount_crypto = actual_cost / price
+                    print(f"LIVETRADE: Ajustando valor da ordem para o saldo livre disponível: ${actual_cost:.2f}")
+
+                if self.usdt_balance >= (actual_cost * 1.002):
                     order = self.exchange.create_market_buy_order(self.symbol, amount_crypto)
                     print(f"LIVETRADE: Compra Executada na Bybit: {order}")
                     self.sync_real_balances()
                     order_success = True
                 else:
-                    print("LIVETRADE: Saldo insuficiente na Bybit para comprar.")
+                    print("LIVETRADE: Saldo insuficiente na Bybit para comprar (mínimo $2.0 USDT).")
             except Exception as e:
                 print(f"ERRO LIVETRADE COMPRA: {e}")
         else:

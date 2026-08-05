@@ -1,11 +1,18 @@
 {
-  "trading_mode": "LIVE",
+  "trading_mode": "PAPER",
   "symbol": "BTC/USDT",
-  "strategy": "MA_CROSSOVER",
+  "strategy": "RSI_SCALPING",
   "trade_amount": 5.0,
-  "take_profit_pct": 1.0,
+  "take_profit_pct": 1.5,
   "stop_loss_pct": 1.0,
-  "usdt_balance": 10000.0,
-  "crypto_balance": 0.0,
-  "initial_balance": 10000.0
+  "usdt_balance": 9995.0,
+  "crypto_balance": 7.7e-05,
+  "initial_balance": 10000.0,
+  "active_position": {
+    "entry_price": 64944.0,
+    "highest_price": 64950.03,
+    "amount": 7.691241685144125e-05,
+    "cost_basis": 5.0,
+    "timestamp": "16:45:18"
+  }
 }
