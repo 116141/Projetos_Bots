@@ -9,7 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const config = JSON.parse(saved);
             if (config.trading_mode) document.getElementById('selectTradingMode').value = config.trading_mode;
             if (config.symbol) document.getElementById('selectSymbol').value = config.symbol;
-            if (config.min_spread) document.getElementById('inputMinSpread').value = config.min_spread;
+            if (config.min_spread !== undefined && config.min_spread !== null && config.min_spread !== '') {
+                document.getElementById('inputMinSpread').value = config.min_spread;
+            }
             if (config.trade_amount) document.getElementById('inputTradeAmount').value = config.trade_amount;
             
             // Enviar silenciosamente para a backend

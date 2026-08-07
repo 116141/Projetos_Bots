@@ -1,0 +1,9 @@
+{
+  "trading_mode": "LIVE",
+  "symbol": "BTC/USDT",
+  "min_spread_pct": 0.1,
+  "trade_amount": 5.0,
+  "total_profit": 0.0,
+  "opportunities_found": 0,
+  "executed_trades": []
+}
