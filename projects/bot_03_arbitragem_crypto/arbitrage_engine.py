@@ -328,9 +328,12 @@ class ArbitrageBotEngine:
                     raw_spread_pct = ((other_price - bybit_price) / bybit_price) * 100
                     net_spread_pct = raw_spread_pct - 0.1  # Taxa Bybit Spot: 0.1%
 
-                    # Calcular montante real disponivel em USDT
+                    # Reinvestimento Automático (Juros Compostos): usa 85% do saldo livre em USDT (mínimo $5.00)
                     available_usdt = self.bybit_usdt_balance if self.bybit_usdt_balance > 0 else self.trade_amount
-                    actual_amount = min(self.trade_amount, available_usdt)
+                    if available_usdt >= 5.0:
+                        actual_amount = max(5.0, available_usdt * 0.85)
+                    else:
+                        actual_amount = available_usdt * 0.98
                     bybit_min_order = 5.0
 
                     if net_spread_pct >= self.min_spread_pct:

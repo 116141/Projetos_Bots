@@ -267,12 +267,16 @@ class TradingBotEngine:
         
         if self.trading_mode == "LIVE" and self.exchange:
             try:
-                # Dimensionamento Dinâmico: se o saldo USDT for inferior a trade_cost (ex: $5), mas >= $2.0, usar 98% do saldo disponível!
-                actual_cost = trade_cost
-                if self.usdt_balance < (trade_cost * 1.002) and self.usdt_balance >= 2.0:
+                # Reinvestimento Automático (Juros Compostos): usa 85% do saldo livre em USDT
+                if self.usdt_balance >= 5.0:
+                    actual_cost = max(5.0, self.usdt_balance * 0.85)
+                elif self.usdt_balance >= 2.0:
                     actual_cost = self.usdt_balance * 0.98
-                    amount_crypto = actual_cost / price
-                    print(f"LIVETRADE: Ajustando valor da ordem para o saldo livre disponível: ${actual_cost:.2f}")
+                else:
+                    actual_cost = trade_cost
+
+                amount_crypto = actual_cost / price
+                print(f"LIVETRADE: Reinvestimento Automático -> Ordem calculada: ${actual_cost:.2f} USDT")
 
                 if self.usdt_balance >= (actual_cost * 1.002):
                     order = self.exchange.create_market_buy_order(self.symbol, amount_crypto)
