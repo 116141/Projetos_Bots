@@ -1,0 +1,24 @@
+{
+  "posto_consular": "Praia",
+  "tipo_visto": "curta_duracao",
+  "site_url": "http://127.0.0.1:5000/",
+  "intervalo_verificacao_segundos": 30,
+  "telegram_bot_token": "",
+  "telegram_chat_id": "",
+  "pasta_pdfs": "agendamentos",
+  "arquivo_requerentes": "requerentes.csv",
+  "arquivo_contas": "contas.json",
+  "headless": true,
+  "seletores": {
+    "campo_email": "#email, input[name='email'], input[type='email']",
+    "campo_senha": "#password, input[name='password'], input[type='password']",
+    "botao_login": "button[type='submit'], input[type='submit'], .btn-login",
+    "link_agendamento": "a:has-text('Agendamento'), a:has-text('Marcação'), a:has-text('Schedule')",
+    "link_novo_agendamento": "a:has-text('Novo'), a:has-text('Nova'), button:has-text('Novo'), button:has-text('Nova')",
+    "calendario": ".calendar, #calendar, .availability-calendar",
+    "vaga_disponivel": "td.available, .available-slot, .slot-open, td:not(.disabled):not(.booked)",
+    "botao_confirmar": "button:has-text('Confirmar'), button:has-text('Confirm'), input[value*='Confirm']",
+    "botao_avancar": "button:has-text('Avançar'), button:has-text('Seguinte'), button:has-text('Next'), input[value*='Next']",
+    "link_pdf": "a:has-text('.pdf'), a:has-text('Download'), a:has-text('Comprovativo')"
+  }
+}

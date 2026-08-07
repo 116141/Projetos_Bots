@@ -475,43 +475,23 @@ class ArbitrageBotEngine:
 
         if self.bybit_api_key and self.bybit_secret_key:
             try:
-                import hmac
-                import hashlib
-                recv_window = "5000"
-                timestamp = str(int(time.time() * 1000))
-                param_str = timestamp + self.bybit_api_key + recv_window + "accountType=UNIFIED"
-                signature = hmac.new(self.bybit_secret_key.encode('utf-8'), param_str.encode('utf-8'), hashlib.sha256).hexdigest()
+                import ccxt
+                ex = ccxt.bybit({
+                    'apiKey': self.bybit_api_key,
+                    'secret': self.bybit_secret_key,
+                    'enableRateLimit': True
+                })
+                bal = ex.fetch_balance()
+                usdt = float(bal.get('USDT', {}).get('free', 0.0) or 0.0)
+                btc = float(bal.get('BTC', {}).get('free', 0.0) or 0.0)
+                curr_price = self.latest_prices.get('Bybit', 64700.0)
+                total_val = usdt + (btc * curr_price)
                 
-                headers = {
-                    "X-BAPI-API-KEY": self.bybit_api_key,
-                    "X-BAPI-SIGN": signature,
-                    "X-BAPI-TIMESTAMP": timestamp,
-                    "X-BAPI-RECV-WINDOW": recv_window
-                }
-                res = requests.get("https://api.bybit.com/v5/account/wallet-balance?accountType=UNIFIED", headers=headers, timeout=4)
-                if res.status_code == 200:
-                    data = res.json()
-                    list_data = data.get("result", {}).get("list", [])
-                    if list_data:
-                        tot_eq = float(list_data[0].get("totalEquity", 0.0))
-                        if tot_eq > 0:
-                            self.bybit_balance = tot_eq
-                        else:
-                            self.bybit_balance = 9.43
-                        # Rastrear saldo por moeda
-                        for coin_data in list_data[0].get("coin", []):
-                            coin = coin_data.get("coin", "")
-                            bal = float(coin_data.get("walletBalance", 0.0))
-                            if coin == "USDT":
-                                self.bybit_usdt_balance = bal
-                            elif coin == "BTC":
-                                self.bybit_btc_balance = bal
-                else:
-                    self.bybit_balance = 9.43
-            except Exception:
-                self.bybit_balance = 9.43
-        else:
-            self.bybit_balance = 9.43
+                self.bybit_usdt_balance = usdt
+                self.bybit_btc_balance = btc
+                self.bybit_balance = round(total_val, 2) if total_val > 0 else 0.0
+            except Exception as e:
+                print(f"Erro ao buscar saldo Bybit no Bot 03: {e}")
 
     def ensure_thread_running(self):
         """Garante que a thread em segundo plano está viva dentro do processo Gunicorn"""
