@@ -121,7 +121,7 @@ class TradingBotEngine:
                             "highest_price": price,
                             "amount": self.crypto_balance,
                             "cost_basis": crypto_val,
-                            "timestamp": datetime.now().strftime("%H:%M:%S")
+                            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         }
                         print(f"AUTOCURA: Posição ativa recuperada automaticamente ({self.crypto_balance} {base_coin} = ${crypto_val:.2f})")
 
@@ -129,7 +129,7 @@ class TradingBotEngine:
                 if self.active_position and not self.trades:
                     trade_record = {
                         "id": 1,
-                        "timestamp": self.active_position.get("timestamp", datetime.now().strftime("%H:%M:%S")),
+                        "timestamp": self.active_position.get("timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
                         "symbol": self.symbol,
                         "type": "BUY",
                         "price": self.active_position.get("entry_price", price),
@@ -249,7 +249,7 @@ class TradingBotEngine:
         if order_success:
             trade_record = {
                 "id": len(self.trades) + 1,
-                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "symbol": self.symbol,
                 "type": "SELL",
                 "price": price,
@@ -300,12 +300,12 @@ class TradingBotEngine:
                 "highest_price": price,
                 "amount": amount_crypto,
                 "cost_basis": trade_cost,
-                "timestamp": datetime.now().strftime("%H:%M:%S")
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
 
             trade_record = {
                 "id": len(self.trades) + 1,
-                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "symbol": self.symbol,
                 "type": "BUY",
                 "price": price,
