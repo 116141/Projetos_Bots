@@ -205,7 +205,7 @@ class TradingBotEngine:
             self.is_running = False
             self._save_config()
 
-    def update_config(self, symbol, strategy, trade_amount, take_profit, stop_loss, trading_mode="PAPER"):
+    def update_config(self, symbol, strategy, trade_amount, take_profit, stop_loss, trading_mode=None):
         with self._lock:
             if self.symbol != symbol:
                 self.symbol = symbol
@@ -214,6 +214,11 @@ class TradingBotEngine:
             self.trade_amount = float(trade_amount)
             self.take_profit_pct = float(take_profit)
             self.stop_loss_pct = float(stop_loss)
+            if trading_mode and trading_mode in ["LIVE", "PAPER"]:
+                if trading_mode == "LIVE" and self.exchange:
+                    self.trading_mode = "LIVE"
+                else:
+                    self.trading_mode = "PAPER"
             self._save_config()
 
     def _run_loop(self):

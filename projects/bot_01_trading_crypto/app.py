@@ -34,8 +34,9 @@ def update_config():
     trade_amount = float(data.get('trade_amount', 500))
     take_profit = float(data.get('take_profit', 2.0))
     stop_loss = float(data.get('stop_loss', 1.0))
+    trading_mode = data.get('trading_mode', None)
     
-    bot.update_config(symbol, strategy, trade_amount, take_profit, stop_loss)
+    bot.update_config(symbol, strategy, trade_amount, take_profit, stop_loss, trading_mode)
     return jsonify({"status": "updated", "config": data})
 
 if __name__ == '__main__':

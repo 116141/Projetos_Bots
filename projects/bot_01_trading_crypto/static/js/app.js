@@ -180,6 +180,7 @@ async function toggleBotState() {
 async function saveConfig(e) {
     if (e) e.preventDefault();
     const config = {
+        trading_mode: document.getElementById('selectTradingMode') ? document.getElementById('selectTradingMode').value : 'LIVE',
         symbol: document.getElementById('selectSymbol').value,
         strategy: document.getElementById('selectStrategy').value,
         trade_amount: parseFloat(document.getElementById('inputTradeAmount').value),
