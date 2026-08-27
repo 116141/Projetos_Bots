@@ -428,20 +428,27 @@ class TradingBotEngine:
             prev_sma_slow = sum(self.price_history[-26:-1]) / 25.0
 
             if self.strategy == "MA_CROSSOVER":
-                if (prev_sma_fast <= prev_sma_slow) and (sma_fast > sma_slow) and (rsi < 65):
+                if (prev_sma_fast <= prev_sma_slow) and (sma_fast > sma_slow) and (rsi < 68):
                     signal_buy = True
             elif self.strategy == "RSI_SCALPING":
-                if rsi <= 30:
+                # Entrar em recuos normais do RSI (RSI <= 55 e recuperando) para disparar varias operacoes por dia
+                if rsi <= 55:
                     signal_buy = True
             elif self.strategy == "GRID_TRADING":
-                if price < (sma_fast * 0.99) and rsi < 40:
+                if price < (sma_fast * 0.998) and rsi < 55:
                     signal_buy = True
 
             if signal_buy:
-                buy_fee = self.trade_amount * self.trading_fee
-                net_investment = self.trade_amount - buy_fee
+                usable_amount = self.trade_amount
+                if self.usdt_balance > 0:
+                    usable_amount = min(self.trade_amount, self.usdt_balance * 0.95)
+                if usable_amount < 1.0 and self.usdt_balance >= 1.0:
+                    usable_amount = self.usdt_balance * 0.95
+
+                buy_fee = usable_amount * self.trading_fee
+                net_investment = usable_amount - buy_fee
                 amount_crypto = net_investment / price
-                self._execute_buy_order(price, amount_crypto, self.trade_amount, f"Smart Entry ({self.strategy})")
+                self._execute_buy_order(price, amount_crypto, usable_amount, f"Smart Entry ({self.strategy})")
 
     def ensure_thread_running(self):
         with self._lock:
