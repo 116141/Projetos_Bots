@@ -262,6 +262,10 @@ class TradingBotEngine:
             net_pnl = net_value - cost_basis
             net_pnl_pct = (net_pnl / cost_basis) * 100 if cost_basis > 0 else 0.0
             
+            # TRAVA DE SEGURANÇA ANTIPERDA: proibir venda manual se o resultado líquido for negativo
+            if net_pnl < 0:
+                return False, f"⚠️ TRAVA ANTIPERDA ATIVA: A operação resultaria em prejuízo de ${abs(net_pnl):.2f} USDT ({net_pnl_pct:.2f}%) após taxas. A venda manual foi bloqueada!"
+            
             self._execute_sell_order(price, amount_crypto, "Venda Manual (Usuário)", net_pnl_pct, net_pnl)
             
             # Forçar a limpeza da posição ativa
@@ -269,7 +273,7 @@ class TradingBotEngine:
             self.crypto_balance = 0.0
             self._save_config()
             
-            return True, "Ordem de venda executada com sucesso!"
+            return True, f"✅ Ordem de venda executada com sucesso! Lucro líquido obtido: +${net_pnl:.2f} USDT (+{net_pnl_pct:.2f}%)."
 
     def _run_loop(self):
         self.fetch_klines()
