@@ -460,13 +460,14 @@ class TradingBotEngine:
                 
             total_equity = self.usdt_balance + current_crypto_value
             
-            # Reset initial balance to real equity if switching to LIVE for the first time
-            if self.trading_mode == "LIVE" and self.initial_balance == 10000.0 and total_equity > 0 and total_equity < 9900:
-                self.initial_balance = total_equity
-                self._save_config()
+            # Se for LIVE, ajustar a banca inicial de referência para o saldo real acumulado
+            if self.trading_mode == "LIVE":
+                if self.initial_balance == 10000.0 or self.initial_balance <= 0:
+                    self.initial_balance = total_equity if total_equity > 0 else 9.90
+                    self._save_config()
                 
             net_pnl = total_equity - self.initial_balance
-            net_pnl_pct = (net_pnl / self.initial_balance) * 100
+            net_pnl_pct = (net_pnl / self.initial_balance) * 100 if self.initial_balance > 0 else 0.0
 
             wins = [t for t in self.trades if t['type'] == 'SELL' and t['pnl'] > 0]
             losses = [t for t in self.trades if t['type'] == 'SELL' and t['pnl'] <= 0]
