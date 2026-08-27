@@ -112,7 +112,7 @@ class TradingBotEngine:
 
                 price = self.current_price if self.current_price > 0 else 64750.0
 
-                # AUTOCURA: Se active_position for None, mas tivermos cripto na carteira (> $1.00), recriar a posição para vender!
+                # AUTOCURA: Se active_position for None, mas tivermos cripto real na carteira (> $1.00), recriar a posição para vender!
                 if self.active_position is None:
                     crypto_val = self.crypto_balance * price
                     if crypto_val >= 1.0:
@@ -124,6 +124,13 @@ class TradingBotEngine:
                             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         }
                         print(f"AUTOCURA: Posição ativa recuperada automaticamente ({self.crypto_balance} {base_coin} = ${crypto_val:.2f})")
+                elif self.trading_mode == "LIVE":
+                    # Se em LIVE a carteira em BTC for irrelevante (< $0.50), limpar a posicao presa antiga de $64944!
+                    crypto_val = self.crypto_balance * price
+                    if crypto_val < 0.50 and self.active_position.get('entry_price', 0) < 70000:
+                        print("LIVETRADE: Limpando posicao simulada antiga presa a $64944")
+                        self.active_position = None
+                        self._save_config()
 
                 # Garantir que a posição ativa tem sempre um registo visível na tabela de histórico
                 if self.active_position and not self.trades:
