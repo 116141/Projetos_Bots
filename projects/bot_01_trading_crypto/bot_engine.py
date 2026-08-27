@@ -282,7 +282,7 @@ class TradingBotEngine:
         while self.is_running:
             price = self.fetch_klines()
             self._evaluate_strategy(price)
-            time.sleep(10)
+            time.sleep(2)
 
     def _execute_sell_order(self, price, amount, close_reason, net_pnl_pct, net_pnl):
         order_success = False
@@ -411,12 +411,12 @@ class TradingBotEngine:
                 elif net_pnl_pct <= -self.stop_loss_pct:
                     should_close = True
                     close_reason = f"Stop Loss ({net_pnl_pct:.2f}%)"
-                elif drop_from_peak_pct >= 0.8 and net_pnl_pct >= 0.5:
+                elif drop_from_peak_pct >= 0.3 and net_pnl_pct >= 0.1:
                     should_close = True
-                    close_reason = f"Trailing Stop Lock (+{net_pnl_pct:.2f}%)"
-                elif self.strategy == "RSI_SCALPING" and rsi >= 70 and net_pnl_pct > 0.1:
+                    close_reason = f"Trailing Lock (+{net_pnl_pct:.2f}%)"
+                elif self.strategy == "RSI_SCALPING" and net_pnl > 0.005:
                     should_close = True
-                    close_reason = f"RSI Overbought ({rsi:.1f})"
+                    close_reason = f"Scalp Lucro Rápido (+${net_pnl:.3f})"
 
                 if should_close:
                     self._execute_sell_order(price, amount_crypto, close_reason, net_pnl_pct, net_pnl)
@@ -431,8 +431,8 @@ class TradingBotEngine:
                 if (prev_sma_fast <= prev_sma_slow) and (sma_fast > sma_slow) and (rsi < 68):
                     signal_buy = True
             elif self.strategy == "RSI_SCALPING":
-                # Entrar em recuos normais do RSI (RSI <= 55 e recuperando) para disparar varias operacoes por dia
-                if rsi <= 55:
+                # Disparar compra em qualquer micro-recuo (RSI <= 62) a cada 2 segundos
+                if rsi <= 62:
                     signal_buy = True
             elif self.strategy == "GRID_TRADING":
                 if price < (sma_fast * 0.998) and rsi < 55:
