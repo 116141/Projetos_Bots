@@ -412,18 +412,15 @@ class TradingBotEngine:
                 should_close = False
                 close_reason = ""
 
-                if net_pnl_pct >= self.take_profit_pct:
+                if net_pnl_pct >= self.take_profit_pct and net_pnl >= 0.05:
                     should_close = True
                     close_reason = f"Take Profit (+{net_pnl_pct:.2f}%)"
                 elif net_pnl_pct <= -self.stop_loss_pct:
                     should_close = True
                     close_reason = f"Stop Loss ({net_pnl_pct:.2f}%)"
-                elif drop_from_peak_pct >= 0.3 and net_pnl_pct >= 0.1:
+                elif self.strategy == "RSI_SCALPING" and rsi >= 65 and net_pnl_pct >= 1.0 and net_pnl >= 0.05:
                     should_close = True
-                    close_reason = f"Trailing Lock (+{net_pnl_pct:.2f}%)"
-                elif self.strategy == "RSI_SCALPING" and net_pnl > 0.005:
-                    should_close = True
-                    close_reason = f"Scalp Lucro Rápido (+${net_pnl:.3f})"
+                    close_reason = f"RSI Exit (+{net_pnl_pct:.2f}%)"
 
                 if should_close:
                     self._execute_sell_order(price, amount_crypto, close_reason, net_pnl_pct, net_pnl)
