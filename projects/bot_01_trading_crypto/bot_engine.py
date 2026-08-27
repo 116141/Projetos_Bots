@@ -474,12 +474,13 @@ class TradingBotEngine:
                 
             total_equity = self.usdt_balance + current_crypto_value
             
-            # Se for LIVE, calcular o PNL somando o lucro de todas as operações fechadas com sucesso
+            # Se for LIVE, o PNL acumulado deve ser a variação direta do Património Total em relação à Banca Inicial de entrada
             if self.trading_mode == "LIVE":
-                sum_pnl = sum(t.get('pnl', 0.0) for t in self.trades if t.get('type') == 'SELL')
-                net_pnl = sum_pnl
-                base_ref = self.initial_balance if self.initial_balance > 0 and self.initial_balance < 500 else 9.90
-                net_pnl_pct = (net_pnl / base_ref) * 100
+                if self.initial_balance <= 0 or self.initial_balance > 500:
+                    self.initial_balance = total_equity
+                    self._save_config()
+                net_pnl = total_equity - self.initial_balance
+                net_pnl_pct = (net_pnl / self.initial_balance) * 100 if self.initial_balance > 0 else 0.0
             else:
                 net_pnl = total_equity - self.initial_balance
                 net_pnl_pct = (net_pnl / self.initial_balance) * 100 if self.initial_balance > 0 else 0.0
