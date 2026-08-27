@@ -124,13 +124,13 @@ class TradingBotEngine:
                             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         }
                         print(f"AUTOCURA: Posição ativa recuperada automaticamente ({self.crypto_balance} {base_coin} = ${crypto_val:.2f})")
-                elif self.trading_mode == "LIVE":
-                    # Se em LIVE a carteira em BTC for irrelevante (< $0.50), limpar a posicao presa antiga de $64944!
-                    crypto_val = self.crypto_balance * price
-                    if crypto_val < 0.50 and self.active_position.get('entry_price', 0) < 70000:
-                        print("LIVETRADE: Limpando posicao simulada antiga presa a $64944")
-                        self.active_position = None
-                        self._save_config()
+                
+                # FORÇAR LIMPEZA DE ORDEM LEGADA SIMULADA DE 64944:
+                if self.active_position and self.active_position.get('entry_price') == 64944.0:
+                    print("LIVETRADE: Eliminando definitivamente posicao simulada presa de $64944")
+                    self.active_position = None
+                    self.trades = [t for t in self.trades if t.get('price') != 64944.0]
+                    self._save_config()
 
                 # Garantir que a posição ativa tem sempre um registo visível na tabela de histórico
                 if self.active_position and not self.trades:
