@@ -238,13 +238,24 @@ class TradingBotEngine:
     def manual_sell(self):
         """Executa uma venda manual a mercado da posição ativa"""
         with self._lock:
-            if self.active_position is None and self.crypto_balance <= 0:
-                return False, "Nenhuma posição ativa ou saldo em cripto para vender."
+            price = self.current_price if self.current_price > 0 else 80000.0
             
-            price = self.current_price if self.current_price > 0 else 64500.0
+            # Em modo LIVE, forçar a sincronização de saldos reais para saber a quantidade exata de BTC na Bybit
+            if self.exchange and self.trading_mode == "LIVE":
+                try:
+                    balance = self.exchange.fetch_balance()
+                    base_coin = self.symbol.split('/')[0]
+                    coin_b = balance.get(base_coin, {})
+                    self.crypto_balance = float(coin_b.get('free', 0.0) or coin_b.get('total', 0.0) or 0.0)
+                except Exception as e:
+                    print(f"Erro ao buscar saldo real para venda: {e}")
+
             amount_crypto = self.active_position['amount'] if self.active_position else self.crypto_balance
-            cost_basis = self.active_position['cost_basis'] if self.active_position else (amount_crypto * price)
             
+            if amount_crypto <= 0:
+                return False, "Nenhuma fração de criptomoeda encontrada em carteira para vender."
+            
+            cost_basis = self.active_position['cost_basis'] if self.active_position else (amount_crypto * price)
             gross_value = amount_crypto * price
             sell_fee = gross_value * self.trading_fee
             net_value = gross_value - sell_fee
@@ -252,6 +263,12 @@ class TradingBotEngine:
             net_pnl_pct = (net_pnl / cost_basis) * 100 if cost_basis > 0 else 0.0
             
             self._execute_sell_order(price, amount_crypto, "Venda Manual (Usuário)", net_pnl_pct, net_pnl)
+            
+            # Forçar a limpeza da posição ativa
+            self.active_position = None
+            self.crypto_balance = 0.0
+            self._save_config()
+            
             return True, "Ordem de venda executada com sucesso!"
 
     def _run_loop(self):
