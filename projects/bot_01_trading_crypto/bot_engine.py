@@ -282,6 +282,29 @@ class TradingBotEngine:
             
             return True, f"✅ Ordem de venda executada com sucesso! Lucro líquido obtido: +${net_pnl:.2f} USDT (+{net_pnl_pct:.2f}%)."
 
+    def reset_history(self):
+        """Limpa o histórico de trades, zera os contadores e reseta a banca inicial para o saldo livre real em USDT"""
+        with self._lock:
+            self.trades.clear()
+            self.active_position = None
+            
+            # Atualizar saldos reais antes de fixar banca inicial
+            if self.exchange and self.trading_mode == "LIVE":
+                try:
+                    balance = self.exchange.fetch_balance()
+                    self.usdt_balance = float(balance.get('USDT', {}).get('free', 0.0) or 0.0)
+                    base_coin = self.symbol.split('/')[0]
+                    coin_b = balance.get(base_coin, {})
+                    self.crypto_balance = float(coin_b.get('free', 0.0) or coin_b.get('total', 0.0) or 0.0)
+                except Exception as e:
+                    print(f"Erro ao buscar saldo real no reset: {e}")
+            
+            curr_price = self.current_price if self.current_price > 0 else 80000.0
+            total_equity = self.usdt_balance + (self.crypto_balance * curr_price)
+            self.initial_balance = total_equity if total_equity > 0 else 10000.0
+            self._save_config()
+            return True, "Histórico e estatísticas resetados com sucesso! O novo ciclo foi iniciado."
+
     def _run_loop(self):
         self.fetch_klines()
         self.sync_real_balances()

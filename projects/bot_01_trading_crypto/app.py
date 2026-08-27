@@ -49,6 +49,11 @@ def manual_sell():
     success, msg = bot.manual_sell()
     return jsonify({"success": success, "message": msg})
 
+@app.route('/api/reset', methods=['POST'])
+def reset_history():
+    success, msg = bot.reset_history()
+    return jsonify({"success": success, "message": msg})
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print("==========================================================")

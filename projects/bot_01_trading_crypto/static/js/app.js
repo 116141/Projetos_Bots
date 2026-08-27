@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('configForm').addEventListener('submit', saveConfig);
     document.getElementById('btnManualBuy').addEventListener('click', manualBuy);
     document.getElementById('btnManualSell').addEventListener('click', manualSell);
+    document.getElementById('btnResetHistory').addEventListener('click', resetHistory);
 });
 
 function initChart() {
@@ -224,5 +225,17 @@ async function manualSell() {
         fetchStatus();
     } catch(err) {
         alert("Erro ao enviar ordem de venda manual.");
+    }
+}
+
+async function resetHistory() {
+    if (!confirm("Tem a certeza que deseja LIMPAR TODO O HISTÓRICO e reiniciar o contador do PNL a $0.00?")) return;
+    try {
+        const res = await fetch('/api/reset', { method: 'POST' });
+        const data = await res.json();
+        alert(data.message);
+        fetchStatus();
+    } catch(err) {
+        alert("Erro ao resetar histórico do bot.");
     }
 }
