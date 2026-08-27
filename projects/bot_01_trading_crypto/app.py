@@ -39,6 +39,16 @@ def update_config():
     bot.update_config(symbol, strategy, trade_amount, take_profit, stop_loss, trading_mode)
     return jsonify({"status": "updated", "config": data})
 
+@app.route('/api/buy', methods=['POST'])
+def manual_buy():
+    success, msg = bot.manual_buy()
+    return jsonify({"success": success, "message": msg})
+
+@app.route('/api/sell', methods=['POST'])
+def manual_sell():
+    success, msg = bot.manual_sell()
+    return jsonify({"success": success, "message": msg})
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print("==========================================================")

@@ -221,6 +221,39 @@ class TradingBotEngine:
                     self.trading_mode = "PAPER"
             self._save_config()
 
+    def manual_buy(self):
+        """Executa uma compra manual a mercado"""
+        with self._lock:
+            if self.active_position is not None:
+                return False, "Já existe uma posição ativa aberta em carteira."
+            
+            price = self.current_price if self.current_price > 0 else 64500.0
+            buy_fee = self.trade_amount * self.trading_fee
+            net_investment = self.trade_amount - buy_fee
+            amount_crypto = net_investment / price
+            
+            self._execute_buy_order(price, amount_crypto, self.trade_amount, "Compra Manual (Usuário)")
+            return True, "Ordem de compra efetuada com sucesso!"
+
+    def manual_sell(self):
+        """Executa uma venda manual a mercado da posição ativa"""
+        with self._lock:
+            if self.active_position is None and self.crypto_balance <= 0:
+                return False, "Nenhuma posição ativa ou saldo em cripto para vender."
+            
+            price = self.current_price if self.current_price > 0 else 64500.0
+            amount_crypto = self.active_position['amount'] if self.active_position else self.crypto_balance
+            cost_basis = self.active_position['cost_basis'] if self.active_position else (amount_crypto * price)
+            
+            gross_value = amount_crypto * price
+            sell_fee = gross_value * self.trading_fee
+            net_value = gross_value - sell_fee
+            net_pnl = net_value - cost_basis
+            net_pnl_pct = (net_pnl / cost_basis) * 100 if cost_basis > 0 else 0.0
+            
+            self._execute_sell_order(price, amount_crypto, "Venda Manual (Usuário)", net_pnl_pct, net_pnl)
+            return True, "Ordem de venda executada com sucesso!"
+
     def _run_loop(self):
         self.fetch_klines()
         self.sync_real_balances()

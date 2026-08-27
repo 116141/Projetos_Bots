@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btnToggleBot').addEventListener('click', toggleBotState);
     document.getElementById('configForm').addEventListener('submit', saveConfig);
+    document.getElementById('btnManualBuy').addEventListener('click', manualBuy);
+    document.getElementById('btnManualSell').addEventListener('click', manualSell);
 });
 
 function initChart() {
@@ -199,4 +201,28 @@ async function saveConfig(e) {
 
     if (e) alert('Configurações do bot atualizadas com sucesso!');
     fetchStatus();
+}
+
+async function manualBuy() {
+    if (!confirm("Deseja executar uma COMPRA MANUAL a mercado agora?")) return;
+    try {
+        const res = await fetch('/api/buy', { method: 'POST' });
+        const data = await res.json();
+        alert(data.message);
+        fetchStatus();
+    } catch(err) {
+        alert("Erro ao enviar ordem de compra manual.");
+    }
+}
+
+async function manualSell() {
+    if (!confirm("Deseja executar uma VENDA MANUAL a mercado agora?")) return;
+    try {
+        const res = await fetch('/api/sell', { method: 'POST' });
+        const data = await res.json();
+        alert(data.message);
+        fetchStatus();
+    } catch(err) {
+        alert("Erro ao enviar ordem de venda manual.");
+    }
 }
