@@ -460,9 +460,9 @@ class TradingBotEngine:
                 
             total_equity = self.usdt_balance + current_crypto_value
             
-            # Se for LIVE, ajustar a banca inicial de referência para o saldo real acumulado
+            # Se for LIVE, ajustar a banca inicial de referência para a banca real de entrada
             if self.trading_mode == "LIVE":
-                if self.initial_balance == 10000.0 or self.initial_balance <= 0:
+                if self.initial_balance >= 9900.0 or self.initial_balance <= 0.0:
                     self.initial_balance = total_equity if total_equity > 0 else 9.90
                     self._save_config()
                 
