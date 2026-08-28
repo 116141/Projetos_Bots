@@ -371,18 +371,16 @@ class TradingBotEngine:
         
         if self.trading_mode == "LIVE" and self.exchange:
             try:
-                # Reinvestimento Automático (Juros Compostos): usa 85% do saldo livre em USDT
-                if self.usdt_balance >= 5.0:
-                    actual_cost = max(5.0, self.usdt_balance * 0.85)
-                elif self.usdt_balance >= 2.0:
-                    actual_cost = self.usdt_balance * 0.98
+                # PILOTO AUTOMÁTICO TOTAL (JUROS COMPOSTOS): Usar sempre 95% do Saldo Disponível em USDT
+                if self.usdt_balance >= 1.0:
+                    actual_cost = self.usdt_balance * 0.95
                 else:
                     actual_cost = trade_cost
 
                 amount_crypto = actual_cost / price
-                print(f"LIVETRADE: Reinvestimento Automático -> Ordem calculada: ${actual_cost:.2f} USDT")
+                print(f"LIVETRADE: Piloto Automático 100% -> Usando 95% da Banca livre: ${actual_cost:.2f} USDT")
 
-                if self.usdt_balance >= (actual_cost * 1.002):
+                if self.usdt_balance >= (actual_cost * 0.999):
                     order = self.exchange.create_market_buy_order(self.symbol, amount_crypto)
                     print(f"LIVETRADE: Compra Executada na Bybit: {order}")
                     self.sync_real_balances()
