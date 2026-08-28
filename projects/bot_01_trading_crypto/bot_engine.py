@@ -462,9 +462,6 @@ class TradingBotEngine:
                 if net_pnl_pct >= self.take_profit_pct and net_pnl >= 0.015:
                     should_close = True
                     close_reason = f"Take Profit (+{net_pnl_pct:.2f}%)"
-                elif net_pnl_pct <= -self.stop_loss_pct:
-                    should_close = True
-                    close_reason = f"Stop Loss ({net_pnl_pct:.2f}%)"
                 elif self.strategy == "RSI_SCALPING" and rsi >= 58 and net_pnl >= 0.005:
                     should_close = True
                     close_reason = f"RSI Scalp Exit (+{net_pnl_pct:.2f}%)"
