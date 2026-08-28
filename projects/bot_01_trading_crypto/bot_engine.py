@@ -459,13 +459,13 @@ class TradingBotEngine:
                     except Exception:
                         pass
 
-                if net_pnl_pct >= self.take_profit_pct and net_pnl >= 0.015:
+                if net_pnl_pct >= self.take_profit_pct and net_pnl >= 0.035:
                     should_close = True
                     close_reason = f"Take Profit (+{net_pnl_pct:.2f}%)"
-                elif self.strategy == "RSI_SCALPING" and rsi >= 58 and net_pnl >= 0.005:
+                elif self.strategy == "RSI_SCALPING" and rsi >= 60 and net_pnl_pct >= 0.5 and net_pnl >= 0.035:
                     should_close = True
                     close_reason = f"RSI Scalp Exit (+{net_pnl_pct:.2f}%)"
-                elif time_held_sec >= 600 and net_pnl >= 0.0:
+                elif time_held_sec >= 600 and net_pnl_pct >= 0.5 and net_pnl >= 0.035:
                     should_close = True
                     close_reason = f"Time Exit Max 10m (+{net_pnl_pct:.2f}%)"
 
