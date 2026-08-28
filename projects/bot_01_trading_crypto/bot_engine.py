@@ -353,6 +353,7 @@ class TradingBotEngine:
 
     def _execute_buy_order(self, price, amount_crypto, trade_cost, reason):
         order_success = False
+        actual_cost = trade_cost
         
         if self.trading_mode == "LIVE" and self.exchange:
             try:
@@ -384,11 +385,12 @@ class TradingBotEngine:
                 order_success = True
 
         if order_success:
+            actual_investment = actual_cost if (self.trading_mode == "LIVE" and self.exchange) else trade_cost
             self.active_position = {
                 "entry_price": price,
                 "highest_price": price,
                 "amount": amount_crypto,
-                "cost_basis": trade_cost,
+                "cost_basis": actual_investment,
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
 
@@ -435,15 +437,28 @@ class TradingBotEngine:
                 should_close = False
                 close_reason = ""
 
+                # Garantir que a operacao fecha em no maximo 10 minutos ou na recuperação do breakeven
+                entry_ts_str = self.active_position.get('timestamp', '')
+                time_held_sec = 0
+                if entry_ts_str:
+                    try:
+                        entry_dt = datetime.strptime(entry_ts_str, "%Y-%m-%d %H:%M:%S")
+                        time_held_sec = (datetime.now() - entry_dt).total_seconds()
+                    except Exception:
+                        pass
+
                 if net_pnl_pct >= self.take_profit_pct and net_pnl >= 0.015:
                     should_close = True
                     close_reason = f"Take Profit (+{net_pnl_pct:.2f}%)"
                 elif net_pnl_pct <= -self.stop_loss_pct:
                     should_close = True
                     close_reason = f"Stop Loss ({net_pnl_pct:.2f}%)"
-                elif self.strategy == "RSI_SCALPING" and rsi >= 62 and net_pnl_pct >= 0.3 and net_pnl >= 0.01:
+                elif self.strategy == "RSI_SCALPING" and rsi >= 58 and net_pnl >= 0.005:
                     should_close = True
                     close_reason = f"RSI Scalp Exit (+{net_pnl_pct:.2f}%)"
+                elif time_held_sec >= 600 and net_pnl >= 0.0:
+                    should_close = True
+                    close_reason = f"Time Exit Max 10m (+{net_pnl_pct:.2f}%)"
 
                 if should_close:
                     self._execute_sell_order(price, amount_crypto, close_reason, net_pnl_pct, net_pnl)
