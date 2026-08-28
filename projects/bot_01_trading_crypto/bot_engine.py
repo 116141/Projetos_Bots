@@ -482,8 +482,8 @@ class TradingBotEngine:
                 if (prev_sma_fast <= prev_sma_slow) and (sma_fast > sma_slow) and (rsi < 68):
                     signal_buy = True
             elif self.strategy == "RSI_SCALPING":
-                # Disparar compra em qualquer micro-recuo (RSI <= 62) a cada 2 segundos
-                if rsi <= 62:
+                # Comprar no fundo exato: Exigir que o RSI caiu para a zona de fundo (RSI <= 38) E o preco deu o 1º sinal de viragem para cima
+                if rsi <= 38 or (len(self.price_history) >= 2 and rsi <= 45 and price > self.price_history[-2]):
                     signal_buy = True
             elif self.strategy == "GRID_TRADING":
                 if price < (sma_fast * 0.998) and rsi < 55:
