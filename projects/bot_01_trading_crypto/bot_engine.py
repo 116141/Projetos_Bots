@@ -21,9 +21,29 @@ class TradingBotEngine:
         self.interval = "1m"        # Usar velas de 1 minuto para mais entradas
         
         # CCXT Exchange Setup (Bybit Spot)
-        self.api_key = os.getenv("BYBIT_API_KEY", "")
-        self.api_secret = os.getenv("BYBIT_API_SECRET", "")
+        self.api_key = os.getenv("BYBIT_API_KEY", "") or os.getenv("BYBIT_KEY", "") or os.getenv("BYBIT_APIKEY", "")
+        self.api_secret = os.getenv("BYBIT_API_SECRET", "") or os.getenv("BYBIT_SECRET", "") or os.getenv("BYBIT_SECRETKEY", "")
         self.exchange = None
+        self._init_exchange()
+        
+        # Portfolio State
+        self.initial_balance = 10000.0
+        self.usdt_balance = 10000.0
+        self.crypto_balance = 0.0
+        
+        # Market Data Memory
+        self.current_price = 64500.0
+        self.price_history = []     # Histórico de velas (close prices)
+        self.trades = []
+        self.active_position = None
+        
+        # Taxas padrão Bybit Spot (Maker 0.1%, Taker 0.1%)
+        self.trading_fee = 0.001
+
+    def _init_exchange(self):
+        if not self.api_key or not self.api_secret:
+            self.api_key = os.getenv("BYBIT_API_KEY", "") or os.getenv("BYBIT_KEY", "") or os.getenv("BYBIT_APIKEY", "")
+            self.api_secret = os.getenv("BYBIT_API_SECRET", "") or os.getenv("BYBIT_SECRET", "") or os.getenv("BYBIT_SECRETKEY", "")
         
         if self.api_key and self.api_secret:
             try:
@@ -40,17 +60,6 @@ class TradingBotEngine:
                 self.trading_mode = "PAPER"
         else:
             self.trading_mode = "PAPER"
-        
-        # Portfolio State
-        self.initial_balance = 10000.0
-        self.usdt_balance = 10000.0
-        self.crypto_balance = 0.0
-        
-        # Market Data Memory
-        self.current_price = 64500.0
-        self.price_history = []     # Histórico de velas (close prices)
-        self.trades = []
-        self.active_position = None
         
         # Taxas padrão Bybit Spot (Maker 0.1%, Taker 0.1%)
         self.trading_fee = 0.001
@@ -222,8 +231,13 @@ class TradingBotEngine:
             self.take_profit_pct = float(take_profit)
             self.stop_loss_pct = float(stop_loss)
             if trading_mode and trading_mode in ["LIVE", "PAPER"]:
-                if trading_mode == "LIVE" and self.exchange:
-                    self.trading_mode = "LIVE"
+                if trading_mode == "LIVE":
+                    if not self.exchange:
+                        self._init_exchange()
+                    if self.exchange:
+                        self.trading_mode = "LIVE"
+                    else:
+                        self.trading_mode = "PAPER"
                 else:
                     self.trading_mode = "PAPER"
             self._save_config()
