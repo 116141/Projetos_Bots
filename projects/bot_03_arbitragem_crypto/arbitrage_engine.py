@@ -289,12 +289,21 @@ class ArbitrageBotEngine:
 
                     if net_spread_pct >= self.min_spread_pct:
                         side_bybit = "Buy" if buy_ex == "Bybit" else "Sell"
-                        success, _ = self.execute_real_bybit_order(self.symbol, side_bybit, self.trade_amount, current_price=buy_price)
+                        
+                        # PILOTO AUTOMÁTICO DE JUROS COMPOSTOS: Usar 85% do saldo disponível na corretora de compra (mínimo $5.00)
+                        if buy_ex == "Bybit":
+                            avail = self.bybit_usdt_balance if self.bybit_usdt_balance > 0 else self.bybit_balance
+                        else:
+                            avail = self.binance_balance
+                        
+                        actual_trade_amount = max(5.0, avail * 0.85) if avail >= 5.0 else self.trade_amount
+                        
+                        success, _ = self.execute_real_bybit_order(self.symbol, side_bybit, actual_trade_amount, current_price=buy_price)
 
                         if success:
                             with self._lock:
                                 self.opportunities_found += 1
-                                net_profit_dollar = (self.trade_amount * (net_spread_pct / 100))
+                                net_profit_dollar = (actual_trade_amount * (net_spread_pct / 100))
                                 self.total_profit += net_profit_dollar
 
                                 trade_record = {
