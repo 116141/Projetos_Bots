@@ -49,6 +49,7 @@ class ArbitrageBotEngine:
                 with open(self.config_file, 'r', encoding='utf-8') as f:
                     cfg = json.load(f)
                     self.trading_mode = cfg.get('trading_mode', 'LIVE')
+                    self.is_running = True
                     self.symbol = cfg.get('symbol', 'BTC/USDT')
                     self.min_spread_pct = float(cfg.get('min_spread_pct', 0.1))
                     self.trade_amount = float(cfg.get('trade_amount', 9.0))
