@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     fetchStatus();
-    setInterval(fetchStatus, 2000);
+    setInterval(fetchStatus, 5000);
 
     document.getElementById('btnToggleBot').addEventListener('click', toggleBotState);
     document.getElementById('configForm').addEventListener('submit', saveConfig);
