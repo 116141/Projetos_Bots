@@ -496,6 +496,23 @@ class ArbitrageBotEngine:
             except Exception as e:
                 print(f"Erro ao buscar saldo Bybit no Bot 03: {e}")
 
+        if self.binance_api_key and self.binance_secret_key:
+            try:
+                import ccxt
+                ex_bin = ccxt.binance({
+                    'apiKey': self.binance_api_key,
+                    'secret': self.binance_secret_key,
+                    'enableRateLimit': True
+                })
+                bal_bin = ex_bin.fetch_balance()
+                usdt_bin = float(bal_bin.get('USDT', {}).get('free', 0.0) or 0.0)
+                btc_bin = float(bal_bin.get('BTC', {}).get('free', 0.0) or 0.0)
+                curr_price_bin = self.latest_prices.get('Binance', 64700.0)
+                total_val_bin = usdt_bin + (btc_bin * curr_price_bin)
+                self.binance_balance = round(total_val_bin, 2) if total_val_bin > 0 else 0.0
+            except Exception as e:
+                print(f"Erro ao buscar saldo Binance no Bot 03: {e}")
+
     def ensure_thread_running(self):
         """Garante que a thread em segundo plano está viva dentro do processo Gunicorn"""
         with self._lock:
