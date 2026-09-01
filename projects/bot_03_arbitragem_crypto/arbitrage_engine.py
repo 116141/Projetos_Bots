@@ -508,18 +508,26 @@ class ArbitrageBotEngine:
 
         if self.binance_api_key and self.binance_secret_key:
             try:
-                import ccxt
-                ex_bin = ccxt.binance({
-                    'apiKey': self.binance_api_key,
-                    'secret': self.binance_secret_key,
-                    'enableRateLimit': True
-                })
-                bal_bin = ex_bin.fetch_balance()
-                usdt_bin = float(bal_bin.get('USDT', {}).get('free', 0.0) or 0.0)
-                btc_bin = float(bal_bin.get('BTC', {}).get('free', 0.0) or 0.0)
-                curr_price_bin = self.latest_prices.get('Binance', 64700.0)
-                total_val_bin = usdt_bin + (btc_bin * curr_price_bin)
-                self.binance_balance = round(total_val_bin, 2) if total_val_bin > 0 else 0.0
+                import hmac
+                import hashlib
+                ts = str(int(time.time() * 1000))
+                query_string = f"timestamp={ts}"
+                signature = hmac.new(self.binance_secret_key.encode('utf-8'), query_string.encode('utf-8'), hashlib.sha256).hexdigest()
+                url = f"https://api.binance.com/api/v3/account?{query_string}&signature={signature}"
+                headers = {"X-MBX-APIKEY": self.binance_api_key}
+                res = requests.get(url, headers=headers, timeout=4)
+                if res.status_code == 200:
+                    balances = res.json().get('balances', [])
+                    usdt_bin = 0.0
+                    btc_bin = 0.0
+                    for b in balances:
+                        if b.get('asset') == 'USDT':
+                            usdt_bin = float(b.get('free', 0.0))
+                        elif b.get('asset') == 'BTC':
+                            btc_bin = float(b.get('free', 0.0))
+                    curr_price_bin = self.latest_prices.get('Binance', 64700.0)
+                    total_val_bin = usdt_bin + (btc_bin * curr_price_bin)
+                    self.binance_balance = round(total_val_bin, 2) if total_val_bin > 0 else 0.0
             except Exception as e:
                 print(f"Erro ao buscar saldo Binance no Bot 03: {e}")
 
