@@ -8,6 +8,11 @@ from bot_engine import TradingBotEngine
 app = Flask(__name__, static_folder='static', template_folder='templates')
 bot = TradingBotEngine()
 
+@app.route('/ping', methods=['GET'])
+def ping():
+    bot.ensure_thread_running()
+    return "PONG", 200
+
 @app.route('/')
 def index():
     return render_template('index.html')
