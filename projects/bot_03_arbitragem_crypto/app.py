@@ -8,6 +8,11 @@ from arbitrage_engine import ArbitrageBotEngine
 app = Flask(__name__, static_folder='static', template_folder='templates')
 bot = ArbitrageBotEngine()
 
+@app.route('/ping', methods=['GET'])
+def ping():
+    bot.ensure_thread_running()
+    return "PONG", 200
+
 @app.route('/')
 def index():
     return render_template('index.html')
