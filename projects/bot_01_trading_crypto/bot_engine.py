@@ -482,9 +482,11 @@ class TradingBotEngine:
                 if (prev_sma_fast <= prev_sma_slow) and (sma_fast > sma_slow) and (rsi < 68):
                     signal_buy = True
             elif self.strategy == "RSI_SCALPING":
-                # Comprar no fundo exato: Exigir que o RSI caiu para a zona de fundo (RSI <= 38) E o preco deu o 1º sinal de viragem para cima
-                if rsi <= 38 or (len(self.price_history) >= 2 and rsi <= 45 and price > self.price_history[-2]):
-                    signal_buy = True
+                # Proteção Estrita contra compras em topo: Exigir que o histórico tenha pelo menos 15 velas (prevenir compras no restart)
+                # E exigir que o RSI esteja estritamente no fundo profundo de sobrevenda (RSI <= 32)
+                if len(self.price_history) >= 15:
+                    if rsi <= 32 or (rsi <= 38 and price < sma_fast):
+                        signal_buy = True
             elif self.strategy == "GRID_TRADING":
                 if price < (sma_fast * 0.998) and rsi < 55:
                     signal_buy = True
