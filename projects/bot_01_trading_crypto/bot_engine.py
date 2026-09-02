@@ -63,8 +63,8 @@ class TradingBotEngine:
             self.trading_mode = "PAPER"
 
         # Conectar à Binance para Dual Trading
-        bin_key = os.getenv("BINANCE_API_KEY", "") or os.getenv("BINANCE_KEY", "")
-        bin_sec = os.getenv("BINANCE_SECRET_KEY", "") or os.getenv("BINANCE_SECRET", "")
+        bin_key = os.getenv("BINANCE_API_KEY", "") or os.getenv("BINANCE_KEY", "") or os.getenv("BINANCE_APIKEY", "")
+        bin_sec = os.getenv("BINANCE_SECRET_KEY", "") or os.getenv("BINANCE_SECRET", "") or os.getenv("BINANCE_SECRETKEY", "")
         self.binance_exchange = None
         if bin_key and bin_sec:
             try:
