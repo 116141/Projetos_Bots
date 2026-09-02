@@ -81,10 +81,11 @@ class ArbitrageBotEngine:
         except Exception:
             pass
 
-    def fetch_live_exchange_prices(self):
-        symbol_fmt = self.symbol.replace("/", "")       # e.g. BTCUSDT
-        symbol_dash = self.symbol.replace("/", "-")     # e.g. BTC-USDT
-        symbol_slash = self.symbol                      # e.g. BTC/USDT
+    def fetch_live_exchange_prices(self, symbol_override=None):
+        target_sym = symbol_override or self.symbol
+        symbol_fmt = target_sym.replace("/", "")       # e.g. BTCUSDT
+        symbol_dash = target_sym.replace("/", "-")     # e.g. BTC-USDT
+        symbol_slash = target_sym                      # e.g. BTC/USDT
         prices = {}
 
         # --- Binance ---
@@ -261,52 +262,69 @@ class ArbitrageBotEngine:
             }
 
     def scan_arbitrage_opportunities(self):
-        prices = self.fetch_live_exchange_prices()
+        # Varredura inteligente multi-moedas (Top pares de alta volatilidade)
+        symbols_to_scan = [self.symbol, "ETH/USDT", "SOL/USDT", "XRP/USDT", "DOGE/USDT", "PEPE/USDT"]
         
-        if not prices:
-            return None
+        for curr_sym in symbols_to_scan:
+            prices = self.fetch_live_exchange_prices(symbol_override=curr_sym)
+            if not prices:
+                continue
 
-        # No modo CONTA REAL (LIVE):
-        if self.trading_mode == "LIVE":
-            live_balance = self.binance_balance + self.bybit_balance
-            if live_balance <= 0:
-                return None
+            # No modo CONTA REAL (LIVE):
+            if self.trading_mode == "LIVE":
+                live_balance = self.binance_balance + self.bybit_balance
+                if live_balance <= 0:
+                    return None
 
-            has_binance_funds = (self.binance_balance > 0)
-            has_bybit_funds = (self.bybit_balance > 0)
+                has_binance_funds = (self.binance_balance > 0)
+                has_bybit_funds = (self.bybit_balance > 0)
 
-            # CASO 1: Saldo em AMBAS as corretoras (Arbitragem Dual Perfeita Binance <-> Bybit)
-            if has_binance_funds and has_bybit_funds:
-                dual_prices = {k: v for k, v in prices.items() if k in ["Binance", "Bybit"]}
-                if len(dual_prices) == 2:
-                    buy_ex = min(dual_prices, key=dual_prices.get)
-                    sell_ex = max(dual_prices, key=dual_prices.get)
-                    buy_price = dual_prices[buy_ex]
-                    sell_price = dual_prices[sell_ex]
+                # CASO 1: Saldo em AMBAS as corretoras (Arbitragem Dual Perfeita Binance <-> Bybit)
+                if has_binance_funds and has_bybit_funds:
+                    dual_prices = {k: v for k, v in prices.items() if k in ["Binance", "Bybit"]}
+                    if len(dual_prices) == 2:
+                        buy_ex = min(dual_prices, key=dual_prices.get)
+                        sell_ex = max(dual_prices, key=dual_prices.get)
+                        buy_price = dual_prices[buy_ex]
+                        sell_price = dual_prices[sell_ex]
 
-                    raw_spread_pct = ((sell_price - buy_price) / buy_price) * 100
-                    net_spread_pct = raw_spread_pct - 0.2
+                        raw_spread_pct = ((sell_price - buy_price) / buy_price) * 100
+                        net_spread_pct = raw_spread_pct - 0.2
 
-                    if net_spread_pct >= self.min_spread_pct:
-                        side_bybit = "Buy" if buy_ex == "Bybit" else "Sell"
-                        
-                        # PILOTO AUTOMÁTICO DE JUROS COMPOSTOS: Usar 85% do saldo disponível na corretora de compra (mínimo $5.00)
-                        if buy_ex == "Bybit":
-                            avail = self.bybit_usdt_balance if self.bybit_usdt_balance > 0 else self.bybit_balance
-                        else:
-                            avail = self.binance_balance
-                        
-                        actual_trade_amount = max(5.0, avail * 0.85) if avail >= 5.0 else self.trade_amount
-                        
-                        success, _ = self.execute_real_bybit_order(self.symbol, side_bybit, actual_trade_amount, current_price=buy_price)
+                        if net_spread_pct >= self.min_spread_pct:
+                            side_bybit = "Buy" if buy_ex == "Bybit" else "Sell"
+                            
+                            # PILOTO AUTOMÁTICO DE JUROS COMPOSTOS: Usar 85% do saldo disponível na corretora de compra (mínimo $5.00)
+                            if buy_ex == "Bybit":
+                                avail = self.bybit_usdt_balance if self.bybit_usdt_balance > 0 else self.bybit_balance
+                            else:
+                                avail = self.binance_balance
+                            
+                            actual_trade_amount = max(5.0, avail * 0.85) if avail >= 5.0 else self.trade_amount
+                            
+                            success, _ = self.execute_real_bybit_order(curr_sym, side_bybit, actual_trade_amount, current_price=buy_price)
 
-                        if success:
-                            with self._lock:
-                                self.opportunities_found += 1
-                                net_profit_dollar = (actual_trade_amount * (net_spread_pct / 100))
-                                self.total_profit += net_profit_dollar
+                            if success:
+                                with self._lock:
+                                    self.opportunities_found += 1
+                                    net_profit_dollar = (actual_trade_amount * (net_spread_pct / 100))
+                                    self.total_profit += net_profit_dollar
 
-                                trade_record = {
+                                    trade_record = {
+                                        "date": datetime.now().strftime("%Y-%m-%d"),
+                                        "timestamp": datetime.now().strftime("%H:%M:%S"),
+                                        "symbol": curr_sym,
+                                        "buy_exchange": buy_ex,
+                                        "buy_price": buy_price,
+                                        "sell_exchange": sell_ex,
+                                        "sell_price": sell_price,
+                                        "gross_spread_pct": round(raw_spread_pct, 2),
+                                        "net_spread_pct": round(net_spread_pct, 2),
+                                        "net_profit": round(net_profit_dollar, 2),
+                                        "status": "REAL DUAL EXECUTADO"
+                                    }
+                                    self.executed_trades.insert(0, trade_record)
+                                    return trade_record
                                     "id": len(self.executed_trades) + 1,
                                     "date": datetime.now().strftime("%Y-%m-%d"),
                                     "timestamp": datetime.now().strftime("%H:%M:%S"),
