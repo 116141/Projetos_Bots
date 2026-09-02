@@ -559,7 +559,19 @@ class TradingBotEngine:
             if self.active_position:
                 current_crypto_value -= (current_crypto_value * self.trading_fee)
                 
-            total_equity = self.usdt_balance + current_crypto_value
+            # Se a Binance estiver ligada para Dual Trading, busca o saldo em tempo real
+            binance_equity = 0.0
+            if hasattr(self, 'binance_exchange') and self.binance_exchange:
+                try:
+                    b_bal = self.binance_exchange.fetch_balance()
+                    b_usdt = float(b_bal.get('USDT', {}).get('free', 0.0) or 0.0)
+                    base_coin = self.symbol.split('/')[0]
+                    b_coin = float(b_bal.get(base_coin, {}).get('free', 0.0) or b_bal.get(base_coin, {}).get('total', 0.0) or 0.0)
+                    binance_equity = b_usdt + (b_coin * curr_price)
+                except Exception:
+                    pass
+
+            total_equity = self.usdt_balance + current_crypto_value + binance_equity
             
             # Se for LIVE, o PNL acumulado deve ser a variação direta do Património Total em relação à Banca Inicial de entrada
             if self.trading_mode == "LIVE":
@@ -581,7 +593,7 @@ class TradingBotEngine:
             safe_sma_fast = self.calculate_sma(7) if len(self.price_history) >= 7 else curr_price
             safe_sma_slow = self.calculate_sma(25) if len(self.price_history) >= 25 else curr_price
             
-            display_mode = "🟢 LIVE TRADING (BYBIT)" if self.trading_mode == "LIVE" else "🟡 PAPER TRADING (SIMULADO)"
+            display_mode = "🟢 DUAL LIVE TRADING (BYBIT + BINANCE)" if (self.trading_mode == "LIVE" and self.binance_exchange) else ("🟢 LIVE TRADING (BYBIT)" if self.trading_mode == "LIVE" else "🟡 PAPER TRADING (SIMULADO)")
 
             return {
                 "is_running": self.is_running,
