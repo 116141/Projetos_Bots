@@ -5,9 +5,27 @@
   "trade_amount": 5.0,
   "take_profit_pct": 1.5,
   "stop_loss_pct": 1.0,
-  "usdt_balance": 10000.0,
-  "crypto_balance": 0.0,
+  "usdt_balance": 0.4008,
+  "crypto_balance": 9.8e-05,
   "initial_balance": 10000.0,
-  "active_position": null,
-  "trades": []
+  "active_position": {
+    "entry_price": 77562.0,
+    "highest_price": 77562.0,
+    "amount": 9.793e-05,
+    "cost_basis": 7.595646660000001,
+    "timestamp": "2026-09-02 15:27:36"
+  },
+  "trades": [
+    {
+      "id": 1,
+      "timestamp": "2026-09-02 15:27:36",
+      "symbol": "BTC/USDT",
+      "type": "BUY",
+      "price": 77562.0,
+      "amount": 9.793e-05,
+      "pnl": 0.0,
+      "pnl_pct": 0.0,
+      "reason": "Em Carteira (Ativa)"
+    }
+  ]
 }

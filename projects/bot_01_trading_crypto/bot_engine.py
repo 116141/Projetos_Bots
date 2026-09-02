@@ -524,10 +524,9 @@ class TradingBotEngine:
                 if (prev_sma_fast <= prev_sma_slow) and (sma_fast > sma_slow) and (rsi < 68):
                     signal_buy = True
             elif self.strategy == "RSI_SCALPING":
-                # Proteção Estrita contra compras em topo: Exigir que o histórico tenha pelo menos 15 velas (prevenir compras no restart)
-                # E exigir que o RSI esteja estritamente no fundo profundo de sobrevenda (RSI <= 32)
-                if len(self.price_history) >= 15:
-                    if rsi <= 32 or (rsi <= 38 and price < sma_fast):
+                # Frequência Calibrada de Scalping: Entra em recuos rápidos (RSI <= 42) ou em micro-reversões (RSI <= 48 com preço a subir)
+                if len(self.price_history) >= 10:
+                    if rsi <= 42 or (rsi <= 48 and price > self.price_history[-2]):
                         signal_buy = True
             elif self.strategy == "GRID_TRADING":
                 if price < (sma_fast * 0.998) and rsi < 55:
