@@ -100,7 +100,11 @@ async function fetchStatus() {
 
         // Update Metrics
         document.getElementById('metricEquity').innerText = `$${data.total_equity.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-        document.getElementById('metricUSDT').innerText = `Disponível: $${data.usdt_balance.toLocaleString('en-US', {minimumFractionDigits: 2})} USDT`;
+        if (data.bybit_balance !== undefined && data.binance_balance !== undefined) {
+            document.getElementById('metricUSDT').innerText = `Bybit: $${data.bybit_balance.toFixed(2)} | Binance: $${data.binance_balance.toFixed(2)}`;
+        } else {
+            document.getElementById('metricUSDT').innerText = `Disponível: $${data.usdt_balance.toLocaleString('en-US', {minimumFractionDigits: 2})} USDT`;
+        }
 
         const pnlElem = document.getElementById('metricPnL');
         const pnlPctElem = document.getElementById('metricPnLPct');

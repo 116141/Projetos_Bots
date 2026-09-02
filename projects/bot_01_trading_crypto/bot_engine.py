@@ -587,18 +587,19 @@ class TradingBotEngine:
                 except Exception as e_b_status:
                     pass
 
-            total_equity = self.usdt_balance + current_crypto_value + binance_equity
+            # Lucro Acumulado Real: Soma dos lucros líquidos de todas as vendas (SELL trades)
+            trades_profit = sum(t.get('pnl', 0.0) for t in self.trades if t.get('type') == 'SELL')
+            net_pnl = round(trades_profit, 2)
             
-            # Se for LIVE, o PNL acumulado deve ser a variação direta do Património Total em relação à Banca Inicial de entrada
-            if self.trading_mode == "LIVE":
-                if self.initial_balance <= 0 or self.initial_balance > 100 or self.initial_balance == 10000.0:
-                    self.initial_balance = total_equity
-                    self._save_config()
-                net_pnl = total_equity - self.initial_balance
-                net_pnl_pct = (net_pnl / self.initial_balance) * 100 if self.initial_balance > 0 else 0.0
-            else:
-                net_pnl = total_equity - self.initial_balance
-                net_pnl_pct = (net_pnl / self.initial_balance) * 100 if self.initial_balance > 0 else 0.0
+            # Se houver posição aberta, adiciona a variação não realizada da posição ativa
+            if self.active_position:
+                cost_b = self.active_position.get('cost_basis', 0.0)
+                if cost_b > 0:
+                    curr_val = (self.active_position.get('amount', 0.0) * curr_price) * (1 - self.trading_fee)
+                    unrealized = curr_val - cost_b
+                    net_pnl += round(unrealized, 2)
+                    
+            net_pnl_pct = (net_pnl / 17.32) * 100 if 17.32 > 0 else 0.0
 
             wins = [t for t in self.trades if t['type'] == 'SELL' and t['pnl'] > 0]
             losses = [t for t in self.trades if t['type'] == 'SELL' and t['pnl'] <= 0]
@@ -611,6 +612,10 @@ class TradingBotEngine:
             
             display_mode = "🟢 DUAL LIVE TRADING (BYBIT + BINANCE)" if (self.trading_mode == "LIVE" and self.binance_exchange) else ("🟢 LIVE TRADING (BYBIT)" if self.trading_mode == "LIVE" else "🟡 PAPER TRADING (SIMULADO)")
 
+            total_equity = self.usdt_balance + current_crypto_value + binance_equity
+            bybit_val = round(self.usdt_balance + current_crypto_value, 2)
+            binance_val = round(binance_equity, 2)
+
             return {
                 "is_running": self.is_running,
                 "symbol": self.symbol,
@@ -620,6 +625,8 @@ class TradingBotEngine:
                 "sma_fast": round(safe_sma_fast, 2),
                 "sma_slow": round(safe_sma_slow, 2),
                 "usdt_balance": round(self.usdt_balance, 2),
+                "bybit_balance": bybit_val,
+                "binance_balance": binance_val,
                 "crypto_balance": round(self.crypto_balance, 6),
                 "total_equity": round(total_equity, 2),
                 "net_pnl": round(net_pnl, 2),
