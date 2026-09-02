@@ -575,7 +575,7 @@ class TradingBotEngine:
             
             # Se for LIVE, o PNL acumulado deve ser a variação direta do Património Total em relação à Banca Inicial de entrada
             if self.trading_mode == "LIVE":
-                if self.initial_balance <= 0 or self.initial_balance > 500:
+                if self.initial_balance <= 0 or self.initial_balance > 100 or self.initial_balance == 10000.0:
                     self.initial_balance = total_equity
                     self._save_config()
                 net_pnl = total_equity - self.initial_balance
