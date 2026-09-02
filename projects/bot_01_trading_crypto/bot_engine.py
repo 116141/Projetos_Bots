@@ -45,6 +45,7 @@ class TradingBotEngine:
             self.api_key = os.getenv("BYBIT_API_KEY", "") or os.getenv("BYBIT_KEY", "") or os.getenv("BYBIT_APIKEY", "")
             self.api_secret = os.getenv("BYBIT_API_SECRET", "") or os.getenv("BYBIT_SECRET", "") or os.getenv("BYBIT_SECRETKEY", "")
         
+        # Conectar à Bybit
         if self.api_key and self.api_secret:
             try:
                 self.exchange = ccxt.bybit({
@@ -60,6 +61,22 @@ class TradingBotEngine:
                 self.trading_mode = "PAPER"
         else:
             self.trading_mode = "PAPER"
+
+        # Conectar à Binance para Dual Trading
+        bin_key = os.getenv("BINANCE_API_KEY", "") or os.getenv("BINANCE_KEY", "")
+        bin_sec = os.getenv("BINANCE_SECRET_KEY", "") or os.getenv("BINANCE_SECRET", "")
+        self.binance_exchange = None
+        if bin_key and bin_sec:
+            try:
+                self.binance_exchange = ccxt.binance({
+                    'apiKey': bin_key,
+                    'secret': bin_sec,
+                    'enableRateLimit': True,
+                    'options': {'defaultType': 'spot'}
+                })
+                print("LIVETRADE: Bot 01 conectado com SUCESSO à Binance para Dual Trading!")
+            except Exception as e:
+                print(f"Erro ao ligar à Binance no Bot 01: {e}")
         
         # Taxas padrão Bybit Spot (Maker 0.1%, Taker 0.1%)
         self.trading_fee = 0.001
@@ -338,6 +355,18 @@ class TradingBotEngine:
                 print(f"LIVETRADE: Venda Executada na Bybit: {order}")
                 self.sync_real_balances()
                 order_success = True
+
+                # DUAL TRADING: Venda paralela na Binance
+                if hasattr(self, 'binance_exchange') and self.binance_exchange:
+                    try:
+                        bin_bal = self.binance_exchange.fetch_balance()
+                        base_coin = self.symbol.split('/')[0]
+                        bin_crypto = float(bin_bal.get(base_coin, {}).get('free', 0.0) or bin_bal.get(base_coin, {}).get('total', 0.0) or 0.0)
+                        if bin_crypto > 0.00005:
+                            bin_sell_order = self.binance_exchange.create_market_sell_order(self.symbol, bin_crypto)
+                            print(f"LIVETRADE DUAL: Venda Executada na BINANCE: {bin_sell_order}")
+                    except Exception as e_bin_sell:
+                        print(f"LIVETRADE DUAL: Binance ordem venda info: {e_bin_sell}")
             except Exception as e:
                 print(f"ERRO LIVETRADE VENDA: {e}")
                 close_reason = f"Erro na Corretora: {e}"
@@ -386,7 +415,20 @@ class TradingBotEngine:
                     self.sync_real_balances()
                     order_success = True
                 else:
-                    print("LIVETRADE: Saldo insuficiente na Bybit para comprar (mínimo $2.0 USDT).")
+                    print("LIVETRADE: Saldo insuficiente na Bybit para comprar.")
+
+                # DUAL TRADING: Se a Binance estiver conectada e tiver saldo disponivel (>= $5.00), executa ordem paralela na Binance!
+                if hasattr(self, 'binance_exchange') and self.binance_exchange:
+                    try:
+                        bin_bal = self.binance_exchange.fetch_balance()
+                        bin_usdt = float(bin_bal.get('USDT', {}).get('free', 0.0) or 0.0)
+                        if bin_usdt >= 5.0:
+                            bin_cost = bin_usdt * 0.95
+                            bin_crypto_amt = bin_cost / price
+                            bin_order = self.binance_exchange.create_market_buy_order(self.symbol, bin_crypto_amt)
+                            print(f"LIVETRADE DUAL: Compra Executada na BINANCE: {bin_order}")
+                    except Exception as e_bin:
+                        print(f"LIVETRADE DUAL: Binance ordem compra info: {e_bin}")
             except Exception as e:
                 print(f"ERRO LIVETRADE COMPRA: {e}")
         else:
