@@ -54,7 +54,7 @@ class TradingBotEngine:
                     'enableRateLimit': True,
                     'options': {'defaultType': 'spot'}
                 })
-                self.trading_mode = "LIVE"
+                self.trading_mode = "PAPER"  # MODO SIMULAÇÃO SEGURO PARA TESTES DE ATR E TIMEOUT
             except Exception as e:
                 print(f"Erro ao ligar à Bybit: {e}")
                 self.exchange = None
