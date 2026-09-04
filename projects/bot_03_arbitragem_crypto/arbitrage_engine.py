@@ -13,7 +13,7 @@ class ArbitrageBotEngine:
         self.symbol = "BTC/USDT"
         self.min_spread_pct = 0.2  # Minimum net profit threshold (%)
         self.trade_amount = 5.0  # $ per arbitrage trade
-        self.trading_mode = "LIVE"  # Default to LIVE mode
+        self.trading_mode = "PAPER"  # DESATIVADO DE CONTA REAL (MODO SIMULAÇÃO DE SEGURANÇA)
         
         # API Keys para Corretoras (Binance / Bybit / KuCoin)
         self.binance_api_key = os.environ.get('BINANCE_API_KEY', '') or os.environ.get('BINANCE_KEY', '')
