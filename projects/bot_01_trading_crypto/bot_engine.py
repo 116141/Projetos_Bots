@@ -54,7 +54,7 @@ class TradingBotEngine:
                     'enableRateLimit': True,
                     'options': {'defaultType': 'spot'}
                 })
-                self.trading_mode = "PAPER"  # MODO SIMULAÇÃO SEGURO PARA TESTES DE ATR E TIMEOUT
+                self.trading_mode = "LIVE"
             except Exception as e:
                 print(f"Erro ao ligar à Bybit: {e}")
                 self.exchange = None
@@ -510,6 +510,9 @@ class TradingBotEngine:
                 elif time_held_sec >= 600 and net_pnl_pct >= 0.5 and net_pnl >= 0.035:
                     should_close = True
                     close_reason = f"Time Exit Max 10m (+{net_pnl_pct:.2f}%)"
+                elif time_held_sec >= 1800:
+                    should_close = True
+                    close_reason = f"Hard Timeout 30m Exit ({net_pnl_pct:.2f}%)"
 
                 if should_close:
                     self._execute_sell_order(price, amount_crypto, close_reason, net_pnl_pct, net_pnl)
@@ -524,9 +527,11 @@ class TradingBotEngine:
                 if (prev_sma_fast <= prev_sma_slow) and (sma_fast > sma_slow) and (rsi < 68):
                     signal_buy = True
             elif self.strategy == "RSI_SCALPING":
-                # Frequência Calibrada de Scalping: Entra em recuos rápidos (RSI <= 42) ou em micro-reversões (RSI <= 48 com preço a subir)
-                if len(self.price_history) >= 10:
-                    if rsi <= 42 or (rsi <= 48 and price > self.price_history[-2]):
+                # Proteção Absoluta contra compras em topo:
+                # 1. Exige histórico sólido de pelo menos 15 velas
+                # 2. Exige obrigatoriamente RSI em fundo de sobrevenda (RSI <= 32) E preço estritamente abaixo da média móvel (price < sma_fast)
+                if len(self.price_history) >= 15:
+                    if rsi <= 32 and price < sma_fast:
                         signal_buy = True
             elif self.strategy == "GRID_TRADING":
                 if price < (sma_fast * 0.998) and rsi < 55:

@@ -1,5 +1,5 @@
 {
-  "trading_mode": "PAPER",
+  "trading_mode": "LIVE",
   "symbol": "BTC/USDT",
   "strategy": "RSI_SCALPING",
   "trade_amount": 5.0,
