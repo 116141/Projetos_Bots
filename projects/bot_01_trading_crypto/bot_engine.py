@@ -136,6 +136,14 @@ class TradingBotEngine:
                 coin_b = balance.get(base_coin, {})
                 self.crypto_balance = float(coin_b.get('free', 0.0) or coin_b.get('total', 0.0) or 0.0)
 
+                # Sincronizar saldo real da Binance via REST API se a chave estiver configurada
+                if hasattr(self, 'binance_exchange') and self.binance_exchange:
+                    try:
+                        bin_bal = self.binance_exchange.fetch_balance()
+                        self.binance_usdt_balance = float(bin_bal.get('USDT', {}).get('free', 0.0) or 0.0)
+                    except Exception as e_bin_sync:
+                        pass
+
                 price = self.current_price if self.current_price > 0 else 64750.0
 
                 # AUTOCURA: Se active_position for None, mas tivermos cripto real na carteira (> $1.00), recriar a posição para vender!
@@ -578,7 +586,7 @@ class TradingBotEngine:
                         signature = hmac.new(bin_sec.encode('utf-8'), query_string.encode('utf-8'), hashlib.sha256).hexdigest()
                         url = f"https://api.binance.com/api/v3/account?{query_string}&signature={signature}"
                         headers = {"X-MBX-APIKEY": bin_key}
-                        res = requests.get(url, headers=headers, timeout=2)
+                        res = requests.get(url, headers=headers, timeout=5)
                         if res.status_code == 200:
                             balances = res.json().get('balances', [])
                             usdt_b = 0.0
@@ -589,8 +597,10 @@ class TradingBotEngine:
                                 elif b.get('asset') == 'BTC':
                                     btc_b = float(b.get('free', 0.0))
                             binance_equity = usdt_b + (btc_b * curr_price)
+                        else:
+                            print(f"BINANCE API RES: HTTP {res.status_code} - {res.text}")
                 except Exception as e_b_status:
-                    pass
+                    print(f"BINANCE API STATUS ERRO: {e_b_status}")
 
             # Lucro Acumulado Real: Soma dos lucros líquidos de todas as vendas (SELL trades)
             trades_profit = sum(t.get('pnl', 0.0) for t in self.trades if t.get('type') == 'SELL')
