@@ -575,13 +575,13 @@ class TradingBotEngine:
             if self.active_position:
                 current_crypto_value -= (current_crypto_value * self.trading_fee)
                 
-            # Se a Binance estiver ligada para Dual Trading, busca o saldo com CACHE de 15 segundos para evitar limite da API da Binance
+            # Se a Binance estiver ligada para Dual Trading, busca o saldo com CACHE de 60 segundos para evitar ban da API da Binance
             now = time.time()
             if not hasattr(self, '_last_binance_check_time'):
                 self._last_binance_check_time = 0.0
                 self._cached_binance_equity = 0.0
 
-            if (now - self._last_binance_check_time) > 15.0:
+            if (now - self._last_binance_check_time) > 60.0:
                 self._last_binance_check_time = now
                 binance_equity = 0.0
                 if not getattr(self, 'binance_exchange', None):
