@@ -75,7 +75,7 @@ class TradingBotEngine:
                     'enableRateLimit': True,
                     'options': {'defaultType': 'spot'}
                 })
-                print("LIVETRADE: Bot 01 conectado com SUCESSO à Binance para Dual Trading!", flush=True)
+                print("BINANCE INIT: Objeto CCXT criado com chaves (sem chamada de rede ainda — aguarda fetch_balance)", flush=True)
             except Exception as e:
                 print(f"BINANCE ERRO LIGACAO: {e}", flush=True)
         else:
