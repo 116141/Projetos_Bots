@@ -65,7 +65,7 @@ class TradingBotEngine:
         # Conectar à Binance para Dual Trading
         bin_key = os.getenv("BINANCE_API_KEY", "") or os.getenv("BINANCE_KEY", "") or os.getenv("BINANCE_APIKEY", "")
         bin_sec = os.getenv("BINANCE_SECRET_KEY", "") or os.getenv("BINANCE_SECRET", "") or os.getenv("BINANCE_SECRETKEY", "")
-        print(f"BINANCE DIAGNOSTICO: KEY encontrada={bool(bin_key)} ({len(bin_key)} chars), SECRET encontrado={bool(bin_sec)} ({len(bin_sec)} chars)")
+        print(f"BINANCE DIAGNOSTICO: KEY encontrada={bool(bin_key)} ({len(bin_key)} chars), SECRET encontrado={bool(bin_sec)} ({len(bin_sec)} chars)", flush=True)
         self.binance_exchange = None
         if bin_key and bin_sec:
             try:
@@ -75,11 +75,11 @@ class TradingBotEngine:
                     'enableRateLimit': True,
                     'options': {'defaultType': 'spot'}
                 })
-                print("LIVETRADE: Bot 01 conectado com SUCESSO à Binance para Dual Trading!")
+                print("LIVETRADE: Bot 01 conectado com SUCESSO à Binance para Dual Trading!", flush=True)
             except Exception as e:
-                print(f"BINANCE ERRO LIGACAO: {e}")
+                print(f"BINANCE ERRO LIGACAO: {e}", flush=True)
         else:
-            print("BINANCE DIAGNOSTICO: Nenhuma chave encontrada — Dual Trading desativado!")
+            print("BINANCE DIAGNOSTICO: Nenhuma chave encontrada — Dual Trading desativado!", flush=True)
         
         # Taxas padrão Bybit Spot (Maker 0.1%, Taker 0.1%)
         self.trading_fee = 0.001
@@ -596,7 +596,7 @@ class TradingBotEngine:
                                 'options': {'defaultType': 'spot'}
                             })
                         except Exception as e_bin_init:
-                            print(f"BINANCE ERRO LAZY-INIT: {e_bin_init}")
+                            print(f"BINANCE ERRO LAZY-INIT: {e_bin_init}", flush=True)
 
                 if hasattr(self, 'binance_exchange') and self.binance_exchange:
                     try:
@@ -605,9 +605,9 @@ class TradingBotEngine:
                         btc_b = float(bin_bal.get('BTC', {}).get('free', 0.0) or 0.0)
                         binance_equity = usdt_b + (btc_b * curr_price)
                         self._cached_binance_equity = binance_equity
-                        print(f"BINANCE STATUS OK: USDT={usdt_b:.2f}, BTC={btc_b:.6f}, equity=${binance_equity:.2f}")
+                        print(f"BINANCE STATUS OK: USDT={usdt_b:.2f}, BTC={btc_b:.6f}, equity=${binance_equity:.2f}", flush=True)
                     except Exception as e_b_status:
-                        print(f"ERRO STATUS BINANCE: {e_b_status}")
+                        print(f"ERRO STATUS BINANCE: {e_b_status}", flush=True)
             
             binance_equity = getattr(self, '_cached_binance_equity', 0.0)
 
