@@ -574,6 +574,20 @@ class TradingBotEngine:
                 
             # Se a Binance estiver ligada para Dual Trading, busca o saldo via CCXT
             binance_equity = 0.0
+            if not getattr(self, 'binance_exchange', None):
+                bin_key = os.getenv("BINANCE_API_KEY", "") or os.getenv("BINANCE_KEY", "") or os.getenv("BINANCE_APIKEY", "")
+                bin_sec = os.getenv("BINANCE_SECRET_KEY", "") or os.getenv("BINANCE_SECRET", "") or os.getenv("BINANCE_SECRETKEY", "")
+                if bin_key and bin_sec:
+                    try:
+                        self.binance_exchange = ccxt.binance({
+                            'apiKey': bin_key,
+                            'secret': bin_sec,
+                            'enableRateLimit': True,
+                            'options': {'defaultType': 'spot'}
+                        })
+                    except Exception:
+                        pass
+
             if hasattr(self, 'binance_exchange') and self.binance_exchange:
                 try:
                     bin_bal = self.binance_exchange.fetch_balance()
