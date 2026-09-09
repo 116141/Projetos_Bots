@@ -30,6 +30,7 @@ class TradingBotEngine:
         self.initial_balance = 10000.0
         self.usdt_balance = 10000.0
         self.crypto_balance = 0.0
+        self.binance_usdt_balance = 0.0  # Atualizado por sync_real_balances (arranque + após trades)
         
         # Market Data Memory
         self.current_price = 64500.0
@@ -575,41 +576,9 @@ class TradingBotEngine:
             if self.active_position:
                 current_crypto_value -= (current_crypto_value * self.trading_fee)
                 
-            # Se a Binance estiver ligada para Dual Trading, busca o saldo com CACHE de 60 segundos para evitar ban da API da Binance
-            now = time.time()
-            if not hasattr(self, '_last_binance_check_time'):
-                self._last_binance_check_time = 0.0
-                self._cached_binance_equity = 0.0
-
-            if (now - self._last_binance_check_time) > 60.0:
-                self._last_binance_check_time = now
-                binance_equity = 0.0
-                if not getattr(self, 'binance_exchange', None):
-                    bin_key = os.getenv("BINANCE_API_KEY", "") or os.getenv("BINANCE_KEY", "") or os.getenv("BINANCE_APIKEY", "")
-                    bin_sec = os.getenv("BINANCE_SECRET_KEY", "") or os.getenv("BINANCE_SECRET", "") or os.getenv("BINANCE_SECRETKEY", "")
-                    if bin_key and bin_sec:
-                        try:
-                            self.binance_exchange = ccxt.binance({
-                                'apiKey': bin_key,
-                                'secret': bin_sec,
-                                'enableRateLimit': True,
-                                'options': {'defaultType': 'spot'}
-                            })
-                        except Exception as e_bin_init:
-                            print(f"BINANCE ERRO LAZY-INIT: {e_bin_init}", flush=True)
-
-                if hasattr(self, 'binance_exchange') and self.binance_exchange:
-                    try:
-                        bin_bal = self.binance_exchange.fetch_balance()
-                        usdt_b = float(bin_bal.get('USDT', {}).get('free', 0.0) or 0.0)
-                        btc_b = float(bin_bal.get('BTC', {}).get('free', 0.0) or 0.0)
-                        binance_equity = usdt_b + (btc_b * curr_price)
-                        self._cached_binance_equity = binance_equity
-                        print(f"BINANCE STATUS OK: USDT={usdt_b:.2f}, BTC={btc_b:.6f}, equity=${binance_equity:.2f}", flush=True)
-                    except Exception as e_b_status:
-                        print(f"ERRO STATUS BINANCE: {e_b_status}", flush=True)
-            
-            binance_equity = getattr(self, '_cached_binance_equity', 0.0)
+            # Saldo Binance: lido de binance_usdt_balance (atualizado por sync_real_balances no arranque e após trades)
+            # NUNCA chamar fetch_balance() aqui — get_status() é chamado a cada 5s pelo browser e causaria ban de IP da Binance
+            binance_equity = getattr(self, 'binance_usdt_balance', 0.0)
 
             # Lucro Acumulado Real: Soma dos lucros líquidos de todas as vendas (SELL trades)
             trades_profit = sum(t.get('pnl', 0.0) for t in self.trades if t.get('type') == 'SELL')
