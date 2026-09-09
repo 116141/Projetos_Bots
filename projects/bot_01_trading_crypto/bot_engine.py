@@ -572,33 +572,14 @@ class TradingBotEngine:
             if self.active_position:
                 current_crypto_value -= (current_crypto_value * self.trading_fee)
                 
-            # Se a Binance estiver ligada para Dual Trading, busca o saldo em tempo real via REST API direta
+            # Se a Binance estiver ligada para Dual Trading, busca o saldo via CCXT
             binance_equity = 0.0
             if hasattr(self, 'binance_exchange') and self.binance_exchange:
                 try:
-                    bin_key = os.getenv("BINANCE_API_KEY", "") or os.getenv("BINANCE_KEY", "") or os.getenv("BINANCE_APIKEY", "")
-                    bin_sec = os.getenv("BINANCE_SECRET_KEY", "") or os.getenv("BINANCE_SECRET", "") or os.getenv("BINANCE_SECRETKEY", "")
-                    if bin_key and bin_sec:
-                        import hmac
-                        import hashlib
-                        ts = str(int(time.time() * 1000))
-                        query_string = f"timestamp={ts}"
-                        signature = hmac.new(bin_sec.encode('utf-8'), query_string.encode('utf-8'), hashlib.sha256).hexdigest()
-                        url = f"https://api.binance.com/api/v3/account?{query_string}&signature={signature}"
-                        headers = {"X-MBX-APIKEY": bin_key}
-                        res = requests.get(url, headers=headers, timeout=5)
-                        if res.status_code == 200:
-                            balances = res.json().get('balances', [])
-                            usdt_b = 0.0
-                            btc_b = 0.0
-                            for b in balances:
-                                if b.get('asset') == 'USDT':
-                                    usdt_b = float(b.get('free', 0.0))
-                                elif b.get('asset') == 'BTC':
-                                    btc_b = float(b.get('free', 0.0))
-                            binance_equity = usdt_b + (btc_b * curr_price)
-                        else:
-                            print(f"BINANCE API RES: HTTP {res.status_code} - {res.text}")
+                    bin_bal = self.binance_exchange.fetch_balance()
+                    usdt_b = float(bin_bal.get('USDT', {}).get('free', 0.0) or 0.0)
+                    btc_b = float(bin_bal.get('BTC', {}).get('free', 0.0) or 0.0)
+                    binance_equity = usdt_b + (btc_b * curr_price)
                 except Exception as e_b_status:
                     print(f"BINANCE API STATUS ERRO: {e_b_status}")
 
