@@ -595,7 +595,30 @@ class TradingBotEngine:
                     btc_b = float(bin_bal.get('BTC', {}).get('free', 0.0) or 0.0)
                     binance_equity = usdt_b + (btc_b * curr_price)
                 except Exception as e_b_status:
-                    print(f"BINANCE API STATUS ERRO: {e_b_status}")
+                    # Fallback REST API direta
+                    try:
+                        bin_key = os.getenv("BINANCE_API_KEY", "") or os.getenv("BINANCE_KEY", "") or os.getenv("BINANCE_APIKEY", "")
+                        bin_sec = os.getenv("BINANCE_SECRET_KEY", "") or os.getenv("BINANCE_SECRET", "") or os.getenv("BINANCE_SECRETKEY", "")
+                        if bin_key and bin_sec:
+                            import hmac
+                            import hashlib
+                            ts = str(int(time.time() * 1000))
+                            q = f"timestamp={ts}"
+                            sig = hmac.new(bin_sec.encode('utf-8'), q.encode('utf-8'), hashlib.sha256).hexdigest()
+                            url = f"https://api.binance.com/api/v3/account?{q}&signature={sig}"
+                            headers = {"X-MBX-APIKEY": bin_key}
+                            res = requests.get(url, headers=headers, timeout=5)
+                            if res.status_code == 200:
+                                balances = res.json().get('balances', [])
+                                u_b, b_b = 0.0, 0.0
+                                for b in balances:
+                                    if b.get('asset') == 'USDT':
+                                        u_b = float(b.get('free', 0.0))
+                                    elif b.get('asset') == 'BTC':
+                                        b_b = float(b.get('free', 0.0))
+                                binance_equity = u_b + (b_b * curr_price)
+                    except Exception:
+                        pass
 
             # Lucro Acumulado Real: Soma dos lucros líquidos de todas as vendas (SELL trades)
             trades_profit = sum(t.get('pnl', 0.0) for t in self.trades if t.get('type') == 'SELL')
