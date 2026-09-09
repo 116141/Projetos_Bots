@@ -572,53 +572,40 @@ class TradingBotEngine:
             if self.active_position:
                 current_crypto_value -= (current_crypto_value * self.trading_fee)
                 
-            # Se a Binance estiver ligada para Dual Trading, busca o saldo via CCXT
-            binance_equity = 0.0
-            if not getattr(self, 'binance_exchange', None):
-                bin_key = os.getenv("BINANCE_API_KEY", "") or os.getenv("BINANCE_KEY", "") or os.getenv("BINANCE_APIKEY", "")
-                bin_sec = os.getenv("BINANCE_SECRET_KEY", "") or os.getenv("BINANCE_SECRET", "") or os.getenv("BINANCE_SECRETKEY", "")
-                if bin_key and bin_sec:
-                    try:
-                        self.binance_exchange = ccxt.binance({
-                            'apiKey': bin_key,
-                            'secret': bin_sec,
-                            'enableRateLimit': True,
-                            'options': {'defaultType': 'spot'}
-                        })
-                    except Exception:
-                        pass
+            # Se a Binance estiver ligada para Dual Trading, busca o saldo com CACHE de 15 segundos para evitar limite da API da Binance
+            now = time.time()
+            if not hasattr(self, '_last_binance_check_time'):
+                self._last_binance_check_time = 0.0
+                self._cached_binance_equity = 0.0
 
-            if hasattr(self, 'binance_exchange') and self.binance_exchange:
-                try:
-                    bin_bal = self.binance_exchange.fetch_balance()
-                    usdt_b = float(bin_bal.get('USDT', {}).get('free', 0.0) or 0.0)
-                    btc_b = float(bin_bal.get('BTC', {}).get('free', 0.0) or 0.0)
-                    binance_equity = usdt_b + (btc_b * curr_price)
-                except Exception as e_b_status:
-                    # Fallback REST API direta
+            if (now - self._last_binance_check_time) > 15.0:
+                self._last_binance_check_time = now
+                binance_equity = 0.0
+                if not getattr(self, 'binance_exchange', None):
+                    bin_key = os.getenv("BINANCE_API_KEY", "") or os.getenv("BINANCE_KEY", "") or os.getenv("BINANCE_APIKEY", "")
+                    bin_sec = os.getenv("BINANCE_SECRET_KEY", "") or os.getenv("BINANCE_SECRET", "") or os.getenv("BINANCE_SECRETKEY", "")
+                    if bin_key and bin_sec:
+                        try:
+                            self.binance_exchange = ccxt.binance({
+                                'apiKey': bin_key,
+                                'secret': bin_sec,
+                                'enableRateLimit': True,
+                                'options': {'defaultType': 'spot'}
+                            })
+                        except Exception:
+                            pass
+
+                if hasattr(self, 'binance_exchange') and self.binance_exchange:
                     try:
-                        bin_key = os.getenv("BINANCE_API_KEY", "") or os.getenv("BINANCE_KEY", "") or os.getenv("BINANCE_APIKEY", "")
-                        bin_sec = os.getenv("BINANCE_SECRET_KEY", "") or os.getenv("BINANCE_SECRET", "") or os.getenv("BINANCE_SECRETKEY", "")
-                        if bin_key and bin_sec:
-                            import hmac
-                            import hashlib
-                            ts = str(int(time.time() * 1000))
-                            q = f"timestamp={ts}"
-                            sig = hmac.new(bin_sec.encode('utf-8'), q.encode('utf-8'), hashlib.sha256).hexdigest()
-                            url = f"https://api.binance.com/api/v3/account?{q}&signature={sig}"
-                            headers = {"X-MBX-APIKEY": bin_key}
-                            res = requests.get(url, headers=headers, timeout=5)
-                            if res.status_code == 200:
-                                balances = res.json().get('balances', [])
-                                u_b, b_b = 0.0, 0.0
-                                for b in balances:
-                                    if b.get('asset') == 'USDT':
-                                        u_b = float(b.get('free', 0.0))
-                                    elif b.get('asset') == 'BTC':
-                                        b_b = float(b.get('free', 0.0))
-                                binance_equity = u_b + (b_b * curr_price)
-                    except Exception:
+                        bin_bal = self.binance_exchange.fetch_balance()
+                        usdt_b = float(bin_bal.get('USDT', {}).get('free', 0.0) or 0.0)
+                        btc_b = float(bin_bal.get('BTC', {}).get('free', 0.0) or 0.0)
+                        binance_equity = usdt_b + (btc_b * curr_price)
+                        self._cached_binance_equity = binance_equity
+                    except Exception as e_b_status:
                         pass
+            
+            binance_equity = getattr(self, '_cached_binance_equity', 0.0)
 
             # Lucro Acumulado Real: Soma dos lucros líquidos de todas as vendas (SELL trades)
             trades_profit = sum(t.get('pnl', 0.0) for t in self.trades if t.get('type') == 'SELL')
