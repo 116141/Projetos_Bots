@@ -522,9 +522,9 @@ class TradingBotEngine:
                 elif time_held_sec >= 600 and net_pnl_pct >= 0.5 and net_pnl >= 0.035:
                     should_close = True
                     close_reason = f"Time Exit Max 10m (+{net_pnl_pct:.2f}%)"
-                elif time_held_sec >= 1800:
+                elif time_held_sec >= 3600:
                     should_close = True
-                    close_reason = f"Hard Timeout 30m Exit ({net_pnl_pct:.2f}%)"
+                    close_reason = f"Hard Timeout 60m Exit ({net_pnl_pct:.2f}%)"
 
                 if should_close:
                     self._execute_sell_order(price, amount_crypto, close_reason, net_pnl_pct, net_pnl)
