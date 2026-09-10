@@ -503,7 +503,7 @@ class TradingBotEngine:
                 should_close = False
                 close_reason = ""
 
-                # Garantir que a operacao fecha em no maximo 10 minutos ou na recuperação do breakeven
+                # Estratégia: aguardar sempre até ao lucro — sem forçar venda com perda
                 entry_ts_str = self.active_position.get('timestamp', '')
                 time_held_sec = 0
                 if entry_ts_str:
@@ -521,10 +521,8 @@ class TradingBotEngine:
                     close_reason = f"RSI Scalp Exit (+{net_pnl_pct:.2f}%)"
                 elif time_held_sec >= 600 and net_pnl_pct >= 0.5 and net_pnl >= 0.035:
                     should_close = True
-                    close_reason = f"Time Exit Max 10m (+{net_pnl_pct:.2f}%)"
-                elif time_held_sec >= 3600:
-                    should_close = True
-                    close_reason = f"Hard Timeout 60m Exit ({net_pnl_pct:.2f}%)"
+                    close_reason = f"Time Exit Lucro (+{net_pnl_pct:.2f}%)"
+                # SEM Hard Timeout — nunca fechar com perda por tempo esgotado
 
                 if should_close:
                     self._execute_sell_order(price, amount_crypto, close_reason, net_pnl_pct, net_pnl)
