@@ -18,7 +18,7 @@ class TradingBotEngine:
         self.trade_amount = 5.0    # $ per trade
         self.take_profit_pct = 0.5  # % (ajustado para scalping rapido 1m)
         self.stop_loss_pct = 0.4    # % (gestão de risco curta)
-        self.interval = "1m"        # Usar velas de 1 minuto para mais entradas
+        self.interval = "5m"        # Velas de 5 minutos — RSI mais fiável, menos ruído
         
         # CCXT Exchange Setup (Bybit Spot)
         self.api_key = os.getenv("BYBIT_API_KEY", "") or os.getenv("BYBIT_KEY", "") or os.getenv("BYBIT_APIKEY", "")
@@ -240,6 +240,24 @@ class TradingBotEngine:
         if len(self.price_history) < period:
             return self.current_price
         return sum(self.price_history[-period:]) / period
+
+    def calculate_rsi_at(self, offset=-1, period=14):
+        """Calcula RSI usando o histórico até 'offset' velas atrás (para confirmar viragem)"""
+        history = self.price_history[:offset] if offset != 0 else self.price_history
+        if len(history) < period + 1:
+            return 50.0
+        gains, losses = [], []
+        for i in range(1, len(history[-period-1:])):
+            diff = history[-period-1:][i] - history[-period-1:][i-1]
+            if diff >= 0:
+                gains.append(diff); losses.append(0)
+            else:
+                gains.append(0); losses.append(abs(diff))
+        avg_gain = sum(gains) / period
+        avg_loss = sum(losses) / period
+        if avg_loss == 0:
+            return 100.0
+        return round(100 - (100 / (1 + avg_gain / avg_loss)), 2)
 
     def start(self):
         with self._lock:
@@ -516,16 +534,18 @@ class TradingBotEngine:
                     except Exception:
                         pass
 
-                if net_pnl_pct >= self.take_profit_pct and net_pnl >= 0.035:
+                # SAÍDAS — por ordem de prioridade
+                if net_pnl_pct >= self.take_profit_pct and net_pnl >= 0.01:
                     should_close = True
                     close_reason = f"Take Profit (+{net_pnl_pct:.2f}%)"
-                elif self.strategy == "RSI_SCALPING" and rsi >= 60 and net_pnl_pct >= 0.5 and net_pnl >= 0.035:
+                elif self.strategy == "RSI_SCALPING" and rsi >= 70 and net_pnl_pct > 0:
                     should_close = True
-                    close_reason = f"RSI Scalp Exit (+{net_pnl_pct:.2f}%)"
-                elif time_held_sec >= 600 and net_pnl_pct >= 0.5 and net_pnl >= 0.035:
+                    close_reason = f"RSI Sobrecomprado Exit (+{net_pnl_pct:.2f}%)"
+                elif net_pnl_pct <= -1.5:
+                    # STOP LOSS: limitar perda a 1.5% — liberta capital para próxima oportunidade
                     should_close = True
-                    close_reason = f"Time Exit Lucro (+{net_pnl_pct:.2f}%)"
-                # SEM Hard Timeout — nunca fechar com perda por tempo esgotado
+                    close_reason = f"Stop Loss ({net_pnl_pct:.2f}%)"
+                    print(f"STOP LOSS ACTIVADO: perda {net_pnl_pct:.2f}% = ${net_pnl:.2f}", flush=True)
 
                 if should_close:
                     self._execute_sell_order(price, amount_crypto, close_reason, net_pnl_pct, net_pnl)
@@ -540,15 +560,21 @@ class TradingBotEngine:
                 if (prev_sma_fast <= prev_sma_slow) and (sma_fast > sma_slow) and (rsi < 68):
                     signal_buy = True
             elif self.strategy == "RSI_SCALPING":
-                # Proteção Absoluta contra compras em topo:
-                # 1. RSI em sobrevenda profunda (RSI <= 32)
-                # 2. Preço abaixo da média móvel rápida (price < sma_fast)
-                # 3. Preço abaixo do tecto máximo configurado (max_buy_price) — NUNCA comprar em preços altos
-                if len(self.price_history) >= 15:
-                    if rsi <= 32 and price < sma_fast and price <= self.max_buy_price:
+                # Condições de compra melhoradas — 5m RSI com confirmação de viragem:
+                # 1. RSI abaixo de 25 (sobrevenda profunda em 5m — sinal muito mais forte)
+                # 2. RSI a SUBIR (viragem confirmada — o fundo já passou)
+                # 3. Preço abaixo da SMA7 (ainda em zona barata)
+                # 4. Preço abaixo do tecto máximo (nunca comprar em preços altos)
+                if len(self.price_history) >= 20:
+                    prev_rsi = self.calculate_rsi_at(-1)  # RSI da vela anterior
+                    rsi_turning_up = (prev_rsi <= 25 and rsi > prev_rsi)  # estava em sobrevenda e está a subir
+                    price_ok = price < sma_fast and price <= self.max_buy_price
+
+                    if rsi_turning_up and price_ok:
                         signal_buy = True
-                    elif rsi <= 32 and price < sma_fast and price > self.max_buy_price:
-                        print(f"COMPRA BLOQUEADA: preço ${price:.2f} acima do tecto máximo ${self.max_buy_price:.2f}", flush=True)
+                        print(f"SINAL COMPRA: RSI virou de {prev_rsi:.1f} para {rsi:.1f}, preço ${price:.2f}", flush=True)
+                    elif rsi <= 25 and not rsi_turning_up:
+                        print(f"AGUARDANDO VIRAGEM RSI: RSI={rsi:.1f} (em sobrevenda mas ainda a cair)", flush=True)
             elif self.strategy == "GRID_TRADING":
                 if price < (sma_fast * 0.998) and rsi < 55:
                     signal_buy = True
