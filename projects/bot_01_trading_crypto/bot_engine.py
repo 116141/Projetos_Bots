@@ -31,6 +31,7 @@ class TradingBotEngine:
         self.usdt_balance = 10000.0
         self.crypto_balance = 0.0
         self.binance_usdt_balance = 0.0  # Atualizado por sync_real_balances (arranque + após trades)
+        self.max_buy_price = 79000.0     # Tecto máximo de compra — nunca comprar acima deste valor
         
         # Market Data Memory
         self.current_price = 64500.0
@@ -100,6 +101,7 @@ class TradingBotEngine:
                     self.trade_amount = float(cfg.get('trade_amount', 5.0))
                     self.take_profit_pct = float(cfg.get('take_profit_pct', 1.0))
                     self.stop_loss_pct = float(cfg.get('stop_loss_pct', 1.0))
+                    self.max_buy_price = float(cfg.get('max_buy_price', 79000.0))
                     
                     if self.trading_mode == "PAPER":
                         self.usdt_balance = float(cfg.get('usdt_balance', 10000.0))
@@ -119,6 +121,7 @@ class TradingBotEngine:
                 'trade_amount': self.trade_amount,
                 'take_profit_pct': self.take_profit_pct,
                 'stop_loss_pct': self.stop_loss_pct,
+                'max_buy_price': self.max_buy_price,
                 'usdt_balance': round(self.usdt_balance, 4),
                 'crypto_balance': round(self.crypto_balance, 6),
                 'initial_balance': round(self.initial_balance, 4),
@@ -538,11 +541,14 @@ class TradingBotEngine:
                     signal_buy = True
             elif self.strategy == "RSI_SCALPING":
                 # Proteção Absoluta contra compras em topo:
-                # 1. Exige histórico sólido de pelo menos 15 velas
-                # 2. Exige obrigatoriamente RSI em fundo de sobrevenda (RSI <= 32) E preço estritamente abaixo da média móvel (price < sma_fast)
+                # 1. RSI em sobrevenda profunda (RSI <= 32)
+                # 2. Preço abaixo da média móvel rápida (price < sma_fast)
+                # 3. Preço abaixo do tecto máximo configurado (max_buy_price) — NUNCA comprar em preços altos
                 if len(self.price_history) >= 15:
-                    if rsi <= 32 and price < sma_fast:
+                    if rsi <= 32 and price < sma_fast and price <= self.max_buy_price:
                         signal_buy = True
+                    elif rsi <= 32 and price < sma_fast and price > self.max_buy_price:
+                        print(f"COMPRA BLOQUEADA: preço ${price:.2f} acima do tecto máximo ${self.max_buy_price:.2f}", flush=True)
             elif self.strategy == "GRID_TRADING":
                 if price < (sma_fast * 0.998) and rsi < 55:
                     signal_buy = True
